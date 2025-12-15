@@ -1,0 +1,16 @@
+body{
+  margin:0;
+  font-family:Segoe UI, Arial, sans-serif;
+  background:#0e0e11;
+  color:#fff;
+}
+.topbar{
+  padding:16px;
+  border-bottom:1px solid #222;
+  background:#111;
+}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px}
+.title{font-size:20px;font-weight:800;color:#ff8a00}
+.sub{font-size:12px;color:#aaa}
+.wrap{padding:24px}

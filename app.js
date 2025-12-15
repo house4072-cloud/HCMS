@@ -1,0 +1,1 @@
+console.log("HCMS app loaded");
