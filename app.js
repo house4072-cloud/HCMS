@@ -88,3 +88,6 @@ async function resolveRemark(id) {
 
   loadRemarks();
 }
+window.addRemark = addRemark;
+window.resolveRemark = resolveRemark;
+window.loadRemarks = loadRemarks;
