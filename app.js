@@ -88,6 +88,9 @@ async function resolveRemark(id) {
 
   loadRemarks();
 }
+
+// 🔽 HTML에서 접근 가능하게 전역 등록
 window.addRemark = addRemark;
 window.resolveRemark = resolveRemark;
 window.loadRemarks = loadRemarks;
+
