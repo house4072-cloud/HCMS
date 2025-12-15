@@ -2,7 +2,7 @@ console.log("HCMS app loaded");
 
 /* 🔧 Supabase 설정 */
 const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co";
-const SUPABASE_KEY = "";
+const SUPABASE_KEY = "sb_publishable_uVUl0jrv8XbQacZaAQ7WZA_NMHyIuqA";
 
 const supabase = window.supabase.createClient(
   SUPABASE_URL,
