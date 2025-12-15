@@ -3,11 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#ff8a00" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="icon" href="assets/logo.svg" />
-  <link rel="stylesheet" href="styles.css" />
   <title>HCMS</title>
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="topbar">
@@ -15,21 +16,26 @@
       <img src="assets/logo.svg" class="logo"/>
       <div>
         <div class="title">HCMS</div>
-        <div class="sub">통합 크레인 점검 관리 시스템</div>
+        <div class="sub">비고(특이사항) 관리</div>
       </div>
     </div>
   </header>
 
   <main class="wrap">
-    <h2>HCMS 설치 완료</h2>
-    <p>이 화면이 보이면 앱 파일은 정상입니다.</p>
-    <p>다음 단계:</p>
-    <ol>
-      <li>Supabase 프로젝트 생성</li>
-      <li>schema.sql 실행</li>
-      <li>설정 화면에서 URL / KEY 입력</li>
-      <li>모바일은 홈화면에 추가(PWA)</li>
-    </ol>
+    <h2>비고 등록</h2>
+
+    <label>크레인 번호</label>
+    <input id="craneNo" placeholder="예: C-014" />
+
+    <label>비고 내용</label>
+    <textarea id="remarkText" placeholder="특이사항 입력"></textarea>
+
+    <button onclick="addRemark()">비고 저장</button>
+
+    <hr />
+
+    <h2>비고 목록</h2>
+    <div id="remarkList"></div>
   </main>
 
   <script src="app.js"></script>
