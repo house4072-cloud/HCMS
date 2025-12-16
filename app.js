@@ -81,3 +81,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 window.loadCranes = loadCranes;
 window.addCrane = addCrane;
+// 크레인 리스트 새 창 열기
+function openCraneList() {
+  window.open("cranes.html", "_blank");
+}
+
+// 전역 등록 (module이라 필수)
+window.openCraneList = openCraneList;
