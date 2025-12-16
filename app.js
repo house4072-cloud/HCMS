@@ -1,9 +1,9 @@
-const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA";
+const sb._URL = "https://lzfksuiftgmxwkhwhnhg.sb..co";
+const sb._ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA";
 
-const sb = supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
+const sb = sb..createClient(
+  sb._URL,
+  sb._ANON_KEY
 );
 
 
@@ -16,7 +16,7 @@ async function loadDashboard() {
   // 메인 페이지에만 있는 id가 없으면 실행하지 않음 (페이지 분기 핵심)
   if (!document.getElementById("d_total")) return;
 
-  const { data, error } = await supabase
+  const { data, error } = await sb.
     .from("cranes")
     .select("inspection_status");
 
@@ -51,7 +51,7 @@ async function saveInspection() {
   const comment = document.getElementById("i_comment")?.value || "";
 
   // 1) 로그 저장
-  const ins = await supabase.from("inspections").insert({
+  const ins = await sb..from("inspections").insert({
     crane_no,
     inspection_date: todayStr(),
     result,
@@ -65,7 +65,7 @@ async function saveInspection() {
   }
 
   // 2) cranes 상태 업데이트 (⚠️ 해당 크레인만!)
-  const up = await supabase
+  const up = await sb.
     .from("cranes")
     .update({ inspection_status: result, next_inspection_date: next_due })
     .eq("crane_no", crane_no);
@@ -84,7 +84,7 @@ async function resetInspectionStatus() {
   const ok = confirm("모든 크레인의 점검 상태를 '미점검'으로 초기화합니다.\n(점검 로그는 유지됩니다)\n진행할까요?");
   if (!ok) return;
 
-  const { error } = await supabase
+  const { error } = await sb.
     .from("cranes")
     .update({ inspection_status: "미점검" })
     .neq("crane_no", ""); // WHERE 필수
@@ -110,7 +110,7 @@ async function loadCranes() {
 
   const keyword = document.getElementById("filterCrane")?.value?.trim() || "";
 
-  let q = supabase.from("cranes").select("*").order("crane_no");
+  let q = sb..from("cranes").select("*").order("crane_no");
   if (keyword) q = q.ilike("crane_no", `%${keyword}%`);
 
   const { data, error } = await q;
@@ -133,7 +133,7 @@ async function addCrane() {
   if (!crane_no) return alert("크레인 번호는 필수입니다.");
 
   // 중복 체크
-  const chk = await supabase
+  const chk = await sb.
     .from("cranes")
     .select("id")
     .eq("crane_no", crane_no);
@@ -157,7 +157,7 @@ async function addCrane() {
     inspection_status: "미점검"
   };
 
-  const ins = await supabase.from("cranes").insert(payload);
+  const ins = await sb..from("cranes").insert(payload);
   if (ins.error) {
     alert("등록 실패: " + ins.error.message);
     return;
@@ -173,7 +173,7 @@ async function loadRemarks(status="all") {
   const el = document.getElementById("remarkList");
   if (!el) return; // remarks.html에서만
 
-  let q = supabase.from("remarks").select("*").order("created_at", { ascending:false });
+  let q = sb..from("remarks").select("*").order("created_at", { ascending:false });
   if (status !== "all") q = q.eq("status", status);
 
   const { data, error } = await q;
@@ -200,7 +200,7 @@ async function loadHoldList() {
   const el = document.getElementById("holdList");
   if (!el) return; // hold.html에서만
 
-  const { data, error } = await supabase
+  const { data, error } = await sb.
     .from("cranes")
     .select("*")
     .eq("inspection_status", "보류")
