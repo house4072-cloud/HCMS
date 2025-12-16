@@ -92,3 +92,32 @@ function openRemarkList() {
 function openHoldList() {
   location.href = "holds.html";
 }
+async function addCrane(category = "일반") {
+  await sb.from("cranes").insert({
+    crane_no: c_no.value,
+    area: c_area.value,
+    crane_type: c_type.value,
+    hoist_type: c_hoist.value,
+    brand: c_brand.value,
+    ton: c_ton.value,
+    group_name: c_group.value,
+    crane_category: category,
+    inspection_status: "미점검"
+  });
+}
+async function updateCrane(id) {
+  await sb.from("cranes")
+    .update({
+      area,
+      crane_type,
+      hoist_type,
+      brand,
+      ton,
+      group_name
+    })
+    .eq("id", id);
+}
+async function deleteCrane(id) {
+  if (!confirm("정말 삭제할까요?")) return;
+  await sb.from("cranes").delete().eq("id", id);
+}
