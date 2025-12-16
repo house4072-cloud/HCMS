@@ -2,54 +2,71 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HCMS</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<h1>HCMS 메인</h1>
+<header class="topbar">
+  <div class="title">HCMS</div>
+</header>
 
-<!-- 대시보드 -->
-<section>
-  <h2>점검 현황</h2>
-  <div>
-    전체 <span id="d_total">0</span> |
-    완료 <span id="d_done">0</span> |
-    보류 <span id="d_hold">0</span> |
-    미완 <span id="d_fail">0</span> |
-    미점검 <span id="d_none">0</span>
-  </div>
-</section>
+<main class="container">
 
-<hr />
+  <!-- 대시보드 -->
+  <section class="card" id="dashboard">
+    <h2>점검 현황</h2>
+    <div class="dash">
+      <div class="dash-item">전체 <span id="d_total">0</span></div>
+      <div class="dash-item">완료 <span id="d_done">0</span></div>
+      <div class="dash-item">보류 <span id="d_hold">0</span></div>
+      <div class="dash-item">미완 <span id="d_fail">0</span></div>
+      <div class="dash-item">미점검 <span id="d_none">0</span></div>
+    </div>
+  </section>
 
-<!-- 점검 입력 -->
-<section>
-  <h2>크레인 점검 입력</h2>
-  <input id="i_crane_no" placeholder="크레인 번호" />
-  <select id="i_result">
-    <option value="완료">완료</option>
-    <option value="보류">보류</option>
-    <option value="미완">미완</option>
-  </select>
-  <input id="i_next" type="date" />
-  <input id="i_comment" placeholder="코멘트" />
-  <button onclick="saveInspection()">점검 저장</button>
-</section>
+  <!-- 점검 입력 -->
+  <section class="card">
+    <h2>크레인 점검 입력</h2>
 
-<hr />
+    <div class="form-grid">
+      <label>크레인 번호</label>
+      <input id="i_crane_no" class="input" placeholder="예: C-014" />
 
-<!-- 사이드 버튼 -->
-<section>
-  <h2>관리 메뉴</h2>
-  <button onclick="openCraneList()">크레인 리스트</button>
-  <button onclick="openRemarkList()">비고 리스트</button>
-  <button onclick="openHoldList()">보류 리스트</button>
-  <button onclick="resetInspectionStatus()">분기 리셋</button>
-</section>
+      <label>결과</label>
+      <select id="i_result" class="input">
+        <option value="완료">완료</option>
+        <option value="보류">보류</option>
+        <option value="미완">미완</option>
+      </select>
+
+      <label>다음 점검일</label>
+      <input id="i_next" class="input" type="date" />
+
+      <label>코멘트</label>
+      <input id="i_comment" class="input" placeholder="메모" />
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" onclick="saveInspection()">점검 저장</button>
+      <button class="btn warn" onclick="resetInspectionStatus()">분기 리셋</button>
+    </div>
+  </section>
+
+  <!-- 메뉴 -->
+  <section class="card">
+    <h2>리스트</h2>
+    <div class="btn-row">
+      <button class="btn" onclick="openCraneList()">크레인 리스트</button>
+      <button class="btn" onclick="openRemarkList()">비고 리스트</button>
+      <button class="btn" onclick="openHoldList()">보류 리스트</button>
+    </div>
+  </section>
+
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script src="app.js"></script>
 </body>
 </html>
-
