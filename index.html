@@ -41,3 +41,20 @@
   <script src="app.js"></script>
 </body>
 </html>
+<hr />
+<section id="remarkListSection">
+  <h2>비고 리스트</h2>
+
+  <div class="filters">
+    <select id="filterStatus">
+      <option value="all">전체</option>
+      <option value="open">미해결</option>
+      <option value="resolved">해결</option>
+    </select>
+
+    <input id="filterCrane" placeholder="크레인 번호 (예: C-014)" />
+    <button id="applyFilterBtn">필터 적용</button>
+  </div>
+
+  <div id="remarkList"></div>
+</section>
