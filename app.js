@@ -48,7 +48,6 @@ async function saveInspection() {
     .update({ inspection_status: result, next_inspection_date: next_due })
     .neq("crane_no", "");
 
-  loadDashboard();
 }
 
 async function resetInspectionStatus() {
