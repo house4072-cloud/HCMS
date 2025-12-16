@@ -110,3 +110,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
 window.saveInspection = saveInspection;
 window.resetInspectionStatus = resetInspectionStatus;
+async function addCrane() {
+  const crane_no = document.getElementById("c_no").value.trim();
+  if (!crane_no) return alert("크레인 번호는 필수입니다.");
+
+  // 중복 체크
+  const { data: exists } = await supabase
+    .from("cranes")
+    .select("id")
+    .eq("crane_no", crane_no);
+
+  if (exists && exists.length > 0) {
+    alert("이미 등록된 크레인 번호입니다.");
+    return;
+  }
+
+  const { error } = await supabase.from("cranes").insert({
+    crane_no,
+    ton: document.getElementById("c_ton").value,
+    area: document.getElementById("c_area").value,
+    location: document.getElementById("c_location").value,
+    crane_type: document.getElementById("c_type").value,
+    brand: document.getElementById("c_brand").value,
+    inspection_status: "미점검"
+  });
+
+  if (error) {
+    alert("등록 실패: " + error.message);
+    return;
+  }
+
+  alert("크레인 등록 완료");
+  loadCranes(); // 리스트 즉시 갱신
+}
+
+window.addCrane = addCrane;
