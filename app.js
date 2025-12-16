@@ -7,4 +7,69 @@ const sb = supabase.createClient(
   SUPABASE_ANON_KEY
 );
 
-console.log("HCMS app loaded");
+/* =========================
+   크레인 리스트 로드 (필터 포함)
+========================= */
+async function loadCranes() {
+  let query = sb.from("cranes").select("*");
+
+  const no = document.getElementById("f_no")?.value;
+  const area = document.getElementById("f_area")?.value;
+  const type = document.getElementById("f_type")?.value;
+  const brand = document.getElementById("f_brand")?.value;
+  const ton = document.getElementById("f_ton")?.value;
+  const status = document.getElementById("f_status")?.value;
+
+  if (no) query = query.ilike("crane_no", `%${no}%`);
+  if (area) query = query.ilike("area", `%${area}%`);
+  if (type) query = query.ilike("crane_type", `%${type}%`);
+  if (brand) query = query.ilike("brand", `%${brand}%`);
+  if (ton) query = query.eq("ton", ton);
+  if (status) query = query.eq("inspection_status", status);
+
+  const { data, error } = await query;
+  if (error) return alert(error.message);
+
+  const tbody = document.getElementById("craneList");
+  tbody.innerHTML = "";
+
+  data.forEach(c => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${c.crane_no}</td>
+      <td>${c.area || ""}</td>
+      <td>${c.crane_type || ""}</td>
+      <td>${c.brand || ""}</td>
+      <td>${c.ton || ""}</td>
+      <td>${c.group_name || ""}</td>
+      <td>${c.inspection_status || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* =========================
+   크레인 등록
+========================= */
+async function addCrane() {
+  const crane_no = document.getElementById("c_no").value.trim();
+  if (!crane_no) return alert("크레인 번호 필수");
+
+  const { error } = await sb.from("cranes").insert({
+    crane_no,
+    area: document.getElementById("c_area").value,
+    crane_type: document.getElementById("c_type").value,
+    brand: document.getElementById("c_brand").value,
+    ton: document.getElementById("c_ton").value,
+    group_name: document.getElementById("c_group").value,
+    inspection_status: "미점검"
+  });
+
+  if (error) return alert(error.message);
+
+  alert("등록 완료");
+  loadCranes();
+}
+
+window.loadCranes = loadCranes;
+window.addCrane = addCrane;
