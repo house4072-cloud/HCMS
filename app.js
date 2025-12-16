@@ -1,289 +1,112 @@
-console.log("HCMS app loaded");
-
-/* 🔧 Supabase 설정 */
-const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA";
-
 const supabase = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
+  "https://lzfksuiftgmxwkhwhnhg.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA"
 );
 
-/* 🔹 비고 추가 */
-async function addRemark() {
-  const craneNo = document.getElementById("craneNo").value.trim();
-  const text = document.getElementById("remarkText").value.trim();
-
-  if (!craneNo || !text) {
-    alert("크레인 번호와 비고 내용을 입력하세요.");
-    return;
-  }
-
-  const { error } = await supabase.from("remarks").insert({
-    crane_no: craneNo,
-    content: text,
-    status: "open"
-  });
-
-  if (error) {
-    alert("저장 실패: " + error.message);
-    return;
-  }
-
-  document.getElementById("remarkText").value = "";
-  loadRemarks();
-}
-
-/* 🔹 비고 불러오기 */
-async function loadRemarks() {
-  const craneNo = document.getElementById("craneNo").value.trim();
-  if (!craneNo) return;
-
-  const { data, error } = await supabase
-    .from("remarks")
-    .select("*")
-    .eq("crane_no", craneNo)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    alert("조회 실패: " + error.message);
-    return;
-  }
-
-  const list = document.getElementById("remarkList");
-  list.innerHTML = "";
-
-  data.forEach(r => {
-    const div = document.createElement("div");
-    div.style.border = "1px solid #333";
-    div.style.padding = "8px";
-    div.style.marginBottom = "6px";
-
-    div.innerHTML = `
-      <b>${r.crane_no}</b>
-      <p>${r.content}</p>
-      <small>상태: ${r.status}</small><br/>
-      ${r.status === "open"
-        ? `<button onclick="resolveRemark('${r.id}')">해결 처리</button>`
-        : `<small>해결됨</small>`}
-    `;
-    list.appendChild(div);
-  });
-}
-
-/* 🔹 비고 해결 처리 */
-async function resolveRemark(id) {
-  const { error } = await supabase
-    .from("remarks")
-    .update({
-      status: "resolved",
-      resolved_at: new Date()
-    })
-    .eq("id", id);
-
-  if (error) {
-    alert("해결 처리 실패: " + error.message);
-    return;
-  }
-
-  loadRemarks();
-}
-
-// 🔽 HTML에서 접근 가능하게 전역 등록
-window.addRemark = addRemark;
-window.resolveRemark = resolveRemark;
-window.loadRemarks = loadRemarks;
-
-async function loadRemarks(filters = {}) {
-  let query = supabase
-    .from("remarks")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  // 상태 필터
-  if (filters.status && filters.status !== "all") {
-    query = query.eq("status", filters.status);
-  }
-
-  // 크레인 번호 필터
-  if (filters.crane_no) {
-    query = query.ilike("crane_no", `%${filters.crane_no}%`);
-  }
-
-  const { data, error } = await query;
-  if (error) {
-    alert("리스트 로드 실패: " + error.message);
-    return;
-  }
-
-  const list = document.getElementById("remarkList");
-  list.innerHTML = ""; // ❗ 초기화는 여기서만
-
-  if (data.length === 0) {
-    list.innerHTML = "<p>표시할 비고가 없습니다.</p>";
-    return;
-  }
-
-  data.forEach(r => {
-    const d = document.createElement("div");
-    d.className = "remark-item";
-    d.innerHTML = `
-      <b>${r.crane_no}</b>
-      <span>(${r.status})</span>
-      <div>${r.content}</div>
-      ${
-        r.status === "open"
-          ? `<button onclick="resolveRemark('${r.id}')">해결 처리</button>`
-          : ""
-      }
-    `;
-    list.appendChild(d);
-  });
-}
-
-async function resolveRemark(id) {
-  const { error } = await supabase
-    .from("remarks")
-    .update({ status: "resolved", resolved_at: new Date() })
-    .eq("id", id);
-
-  if (error) {
-    alert("해결 처리 실패: " + error.message);
-    return;
-  }
-
-  applyFilters(); // 해결 후 재조회
-}
-
-function applyFilters() {
-  const status = document.getElementById("filterStatus").value;
-  const crane_no = document.getElementById("filterCrane").value.trim();
-
-  loadRemarks({ status, crane_no });
-}
-
-// 초기 로드 + 버튼 연결
-document.addEventListener("DOMContentLoaded", () => {
-  document
-    .getElementById("applyFilterBtn")
-    ?.addEventListener("click", applyFilters);
-
-  loadRemarks(); // 처음엔 전체 조회
-});
-
-// 전역 등록
-window.resolveRemark = resolveRemark;
+// ---------- 공통 ----------
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
+// ---------- 메인 ----------
+async function loadDashboard() {
+  const { data } = await supabase.from("cranes").select("inspection_status");
+  if (!data) return;
+
+  let done=0, hold=0, fail=0, none=0;
+  data.forEach(c => {
+    if (c.inspection_status === "완료") done++;
+    else if (c.inspection_status === "보류") hold++;
+    else if (c.inspection_status === "미완") fail++;
+    else none++;
+  });
+
+  document.getElementById("d_total").innerText = data.length;
+  document.getElementById("d_done").innerText = done;
+  document.getElementById("d_hold").innerText = hold;
+  document.getElementById("d_fail").innerText = fail;
+  document.getElementById("d_none").innerText = none;
+}
+
 async function saveInspection() {
   const crane_no = document.getElementById("i_crane_no").value.trim();
-  const result = document.getElementById("i_result").value;
-  const inspection_date =
-    document.getElementById("i_date").value || todayStr();
-  const next_due = document.getElementById("i_next").value || null;
-  const comment = document.getElementById("i_comment").value.trim();
-
   if (!crane_no) return alert("크레인 번호 필수");
 
-  // 1) 로그 INSERT
-  const { error: logErr } = await supabase
-    .from("inspections")
-    .insert({
-      crane_no,
-      inspection_date,
-      result,
-      comment,
-      next_due,
-    });
+  const result = document.getElementById("i_result").value;
+  const next_due = document.getElementById("i_next").value || null;
+  const comment = document.getElementById("i_comment").value;
 
-  if (logErr) {
-    alert("점검 로그 저장 실패: " + logErr.message);
-    return;
-  }
-
-  // 2) 현재 상태 UPDATE
-  const { error: craneErr } = await supabase
-    .from("cranes")
-    .update({
-      inspection_status: result,
-      next_inspection_date: next_due,
-    })
-    .eq("crane_no", crane_no);
-
-  if (craneErr) {
-    alert("현재 상태 업데이트 실패: " + craneErr.message);
-    return;
-  }
-
-  // 입력칸 초기화
-  document.getElementById("i_comment").value = "";
-
-  loadInspectionLogs();
-}
-
-async function loadInspectionLogs() {
-  const { data, error } = await supabase
-    .from("inspections")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(50);
-
-  if (error) return;
-
-  const wrap = document.getElementById("inspectionLog");
-  wrap.innerHTML = "";
-
-  data.forEach(i => {
-    const d = document.createElement("div");
-    d.className = "inspection-item";
-    d.innerHTML = `
-      <b>${i.crane_no}</b>
-      <span> | ${i.inspection_date}</span>
-      <span> | ${i.result}</span>
-      <div>${i.comment || ""}</div>
-    `;
-    wrap.appendChild(d);
+  await supabase.from("inspections").insert({
+    crane_no,
+    inspection_date: todayStr(),
+    result,
+    comment,
+    next_due
   });
+
+  await supabase.from("cranes")
+    .update({ inspection_status: result, next_inspection_date: next_due })
+    .neq("crane_no", "");
+
+  loadDashboard();
 }
 
-// 버튼 연결 + 초기 로드
-document.addEventListener("DOMContentLoaded", () => {
-  document
-    .getElementById("saveInspectionBtn")
-    ?.addEventListener("click", saveInspection);
-
-  loadInspectionLogs();
-});
-
-// 전역
-window.saveInspection = saveInspection;
 async function resetInspectionStatus() {
-  const ok = confirm(
-    "모든 크레인의 점검 상태를 '미점검'으로 초기화합니다.\n(점검 로그는 유지됩니다)\n진행할까요?"
-  );
-  if (!ok) return;
-
-  const { error } = await supabase
-    .from("cranes")
+  if (!confirm("모든 점검 상태를 초기화합니다.")) return;
+  await supabase.from("cranes")
     .update({ inspection_status: "미점검" })
-    .neq("crane_no", ""); // 🔴 WHERE 역할 (필수)
-
-  if (error) {
-    alert("리셋 실패: " + error.message);
-    return;
-  }
-
-  alert("점검 상태가 초기화되었습니다.");
+    .neq("crane_no", "");
+  loadDashboard();
 }
 
-// 버튼 연결
+// ---------- 새 창 ----------
+function openCraneList(){ window.open("cranes.html"); }
+function openRemarkList(){ window.open("remarks.html"); }
+function openHoldList(){ window.open("hold.html"); }
+
+// ---------- 리스트 ----------
+async function loadCranes() {
+  const { data } = await supabase.from("cranes").select("*").order("crane_no");
+  const el = document.getElementById("craneList");
+  if (!el) return;
+  el.innerHTML = "";
+  data.forEach(c => el.innerHTML += `<div>${c.crane_no} | ${c.inspection_status}</div>`);
+}
+
+async function loadRemarks(status="all") {
+  let q = supabase.from("remarks").select("*");
+  if (status !== "all") q = q.eq("status", status);
+  const { data } = await q.order("created_at", { ascending:false });
+  const el = document.getElementById("remarkList");
+  if (!el) return;
+  el.innerHTML = "";
+  data.forEach(r => el.innerHTML += `<div>${r.crane_no} - ${r.content}</div>`);
+}
+
+function applyRemarkFilter(){
+  const s = document.getElementById("filterStatus").value;
+  loadRemarks(s);
+}
+
+async function loadHoldList() {
+  const { data } = await supabase
+    .from("cranes")
+    .select("*")
+    .eq("inspection_status", "보류");
+
+  const el = document.getElementById("holdList");
+  if (!el) return;
+  el.innerHTML = "";
+  data.forEach(c => el.innerHTML += `<div>${c.crane_no}</div>`);
+}
+
+// ---------- 초기 ----------
 document.addEventListener("DOMContentLoaded", () => {
-  document
-    .getElementById("resetInspectionBtn")
-    ?.addEventListener("click", resetInspectionStatus);
+  loadDashboard();
+  loadCranes();
+  loadRemarks();
+  loadHoldList();
 });
 
-// 전역
+window.saveInspection = saveInspection;
 window.resetInspectionStatus = resetInspectionStatus;
