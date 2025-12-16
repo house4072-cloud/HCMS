@@ -1,1 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>HCMS</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<h1>HCMS 메인</h1>
+
+<!-- 대시보드 -->
+<section>
+  <h2>점검 현황</h2>
+  <div>
+    전체 <span id="d_total">0</span> |
+    완료 <span id="d_done">0</span> |
+    보류 <span id="d_hold">0</span> |
+    미완 <span id="d_fail">0</span> |
+    미점검 <span id="d_none">0</span>
+  </div>
+</section>
+
+<hr />
+
+<!-- 점검 입력 -->
+<section>
+  <h2>크레인 점검 입력</h2>
+  <input id="i_crane_no" placeholder="크레인 번호" />
+  <select id="i_result">
+    <option value="완료">완료</option>
+    <option value="보류">보류</option>
+    <option value="미완">미완</option>
+  </select>
+  <input id="i_next" type="date" />
+  <input id="i_comment" placeholder="코멘트" />
+  <button onclick="saveInspection()">점검 저장</button>
+</section>
+
+<hr />
+
+<!-- 사이드 버튼 -->
+<section>
+  <h2>관리 메뉴</h2>
+  <button onclick="openCraneList()">크레인 리스트</button>
+  <button onclick="openRemarkList()">비고 리스트</button>
+  <button onclick="openHoldList()">보류 리스트</button>
+  <button onclick="resetInspectionStatus()">분기 리셋</button>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="app.js"></script>
+</body>
+</html>
 
