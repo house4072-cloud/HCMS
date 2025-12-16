@@ -173,3 +173,89 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // 전역 등록
 window.resolveRemark = resolveRemark;
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function saveInspection() {
+  const crane_no = document.getElementById("i_crane_no").value.trim();
+  const result = document.getElementById("i_result").value;
+  const inspection_date =
+    document.getElementById("i_date").value || todayStr();
+  const next_due = document.getElementById("i_next").value || null;
+  const comment = document.getElementById("i_comment").value.trim();
+
+  if (!crane_no) return alert("크레인 번호 필수");
+
+  // 1) 로그 INSERT
+  const { error: logErr } = await supabase
+    .from("inspections")
+    .insert({
+      crane_no,
+      inspection_date,
+      result,
+      comment,
+      next_due,
+    });
+
+  if (logErr) {
+    alert("점검 로그 저장 실패: " + logErr.message);
+    return;
+  }
+
+  // 2) 현재 상태 UPDATE
+  const { error: craneErr } = await supabase
+    .from("cranes")
+    .update({
+      inspection_status: result,
+      next_inspection_date: next_due,
+    })
+    .eq("crane_no", crane_no);
+
+  if (craneErr) {
+    alert("현재 상태 업데이트 실패: " + craneErr.message);
+    return;
+  }
+
+  // 입력칸 초기화
+  document.getElementById("i_comment").value = "";
+
+  loadInspectionLogs();
+}
+
+async function loadInspectionLogs() {
+  const { data, error } = await supabase
+    .from("inspections")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) return;
+
+  const wrap = document.getElementById("inspectionLog");
+  wrap.innerHTML = "";
+
+  data.forEach(i => {
+    const d = document.createElement("div");
+    d.className = "inspection-item";
+    d.innerHTML = `
+      <b>${i.crane_no}</b>
+      <span> | ${i.inspection_date}</span>
+      <span> | ${i.result}</span>
+      <div>${i.comment || ""}</div>
+    `;
+    wrap.appendChild(d);
+  });
+}
+
+// 버튼 연결 + 초기 로드
+document.addEventListener("DOMContentLoaded", () => {
+  document
+    .getElementById("saveInspectionBtn")
+    ?.addEventListener("click", saveInspection);
+
+  loadInspectionLogs();
+});
+
+// 전역
+window.saveInspection = saveInspection;
