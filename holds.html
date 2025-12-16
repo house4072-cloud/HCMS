@@ -3,8 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <title>HCMS | 보류 리스트</title>
+
+  <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js" type="module"></script>
+
+  <!-- app.js (module ❌) -->
+  <script src="app.js"></script>
 
   <style>
     body { font-family: Arial; padding: 20px; font-size: 17px; }
@@ -39,30 +43,4 @@
     </tr>
   </thead>
   <tbody id="holdList"></tbody>
-</table>
-
-<script type="module">
-  document.addEventListener("DOMContentLoaded", async () => {
-    const { data, error } = await sb
-      .from("cranes")
-      .select("*")
-      .eq("inspection_status", "보류");
-
-    if (error) return alert(error.message);
-
-    const tbody = document.getElementById("holdList");
-    data.forEach(c => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${c.crane_no}</td>
-        <td>${c.area || ""}</td>
-        <td>${c.hold_reason || ""}</td>
-        <td>${c.updated_at?.slice(0,10) || ""}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  });
-</script>
-
-</body>
-</html>
+</
