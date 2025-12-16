@@ -2,30 +2,55 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>크레인 리스트</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<h1>크레인 리스트</h1>
+<header class="topbar">
+  <div class="title">크레인 리스트</div>
+</header>
 
-<input id="filterCrane" placeholder="크레인 번호 검색" />
-<button onclick="loadCranes()">검색</button>
+<main class="container">
 
-<div id="craneList"></div>
+  <section class="card">
+    <h2>검색</h2>
+    <div class="btn-row">
+      <input id="filterCrane" class="input" placeholder="크레인 번호 검색" />
+      <button class="btn" onclick="loadCranes()">검색</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>목록</h2>
+    <div id="craneList" class="list"></div>
+  </section>
+
+  <section class="card">
+    <h2>크레인 등록 (관리자)</h2>
+    <div class="form-grid">
+      <label>크레인 번호</label>
+      <input id="c_no" class="input" placeholder="필수" />
+      <label>톤수</label>
+      <input id="c_ton" class="input" placeholder="예: 25" />
+      <label>지역</label>
+      <input id="c_area" class="input" placeholder="예: 거제" />
+      <label>위치</label>
+      <input id="c_location" class="input" placeholder="예: A동 3라인" />
+      <label>타입</label>
+      <input id="c_type" class="input" placeholder="예: 타워/소형" />
+      <label>브랜드</label>
+      <input id="c_brand" class="input" placeholder="예: HHI" />
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="addCrane()">크레인 등록</button>
+    </div>
+  </section>
+
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script src="app.js"></script>
 </body>
 </html>
-<hr />
-
-<h2>크레인 등록 (관리자)</h2>
-
-<input id="c_no" placeholder="크레인 번호" />
-<input id="c_ton" placeholder="톤수" />
-<input id="c_area" placeholder="지역" />
-<input id="c_location" placeholder="위치" />
-<input id="c_type" placeholder="타입" />
-<input id="c_brand" placeholder="브랜드" />
-
-<button onclick="addCrane()">크레인 등록</button>
