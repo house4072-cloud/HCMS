@@ -259,3 +259,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // 전역
 window.saveInspection = saveInspection;
+async function resetInspectionStatus() {
+  const ok = confirm(
+    "모든 크레인의 점검 상태를 '미점검'으로 초기화합니다.\n(점검 로그는 유지됩니다)\n진행할까요?"
+  );
+  if (!ok) return;
+
+  const { error } = await supabase
+    .from("cranes")
+    .update({ inspection_status: "미점검" });
+
+  if (error) {
+    alert("리셋 실패: " + error.message);
+    return;
+  }
+
+  alert("점검 상태가 초기화되었습니다.");
+}
+
+// 버튼 연결
+document.addEventListener("DOMContentLoaded", () => {
+  document
+    .getElementById("resetInspectionBtn")
+    ?.addEventListener("click", resetInspectionStatus);
+});
+
+// 전역
+window.resetInspectionStatus = resetInspectionStatus;
