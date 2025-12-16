@@ -1,7 +1,7 @@
 const sb._URL = "https://lzfksuiftgmxwkhwhnhg.sb..co";
 const sb._ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA";
 
-const sb = sb..createClient(
+const sb. = sb..createClient(
   sb._URL,
   sb._ANON_KEY
 );
