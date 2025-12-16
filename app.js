@@ -128,13 +128,13 @@ window.deleteCrane = deleteCrane;
 
 // 페이지 이동 (원래대로 유지)
 function openCraneList() {
-  location.href = "cranes.html";
+  window.open("cranes.html", "_blank");
 }
 
 function openRemarkList() {
-  location.href = "remarks.html";
+  window.open("remarks.html", "_blank");
 }
 
 function openHoldList() {
-  location.href = "holds.html";
+  window.open("holds.html", "_blank");
 }
