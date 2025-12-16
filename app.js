@@ -81,10 +81,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
 window.loadCranes = loadCranes;
 window.addCrane = addCrane;
-// 크레인 리스트 새 창 열기
-function openCraneList() {
-  window.open("cranes.html", "_blank");
-}
+// ================================
+// 리스트 새 창 열기 (module 전역 등록)
+// ================================
 
-// 전역 등록 (module이라 필수)
+// 크레인 리스트
+function openCraneList() {
+  window.open("cranes.html", "_blank", "width=1600,height=900");
+}
 window.openCraneList = openCraneList;
+
+// 비고 리스트
+function openRemarkList() {
+  window.open("remarks.html", "_blank", "width=1600,height=900");
+}
+window.openRemarkList = openRemarkList;
+
+// 보류 리스트
+function openHoldList() {
+  window.open("holds.html", "_blank", "width=1600,height=900");
+}
+window.openHoldList = openHoldList;
