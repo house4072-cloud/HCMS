@@ -1,4 +1,4 @@
-// ===== Supabase 초기화 (TEST) =====
+// ===== Supabase 초기화 (KEY / URL 직접 입력) =====
 const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA";
 
@@ -31,6 +31,8 @@ async function loadCranes() {
   if (error) return alert(error.message);
 
   const tbody = document.getElementById("craneList");
+  if (!tbody) return;
+
   tbody.innerHTML = "";
 
   data.forEach(c => {
@@ -38,86 +40,4 @@ async function loadCranes() {
     tr.innerHTML = `
       <td>${c.crane_no}</td>
       <td>${c.area || ""}</td>
-      <td>${c.crane_type || ""}</td>
-      <td>${c.brand || ""}</td>
-      <td>${c.ton || ""}</td>
-      <td>${c.group_name || ""}</td>
-      <td>${c.inspection_status || ""}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-/* =========================
-   크레인 등록
-========================= */
-async function addCrane() {
-  const crane_no = document.getElementById("c_no").value.trim();
-  if (!crane_no) return alert("크레인 번호 필수");
-
-  const { error } = await sb.from("cranes").insert({
-    crane_no,
-    area: document.getElementById("c_area").value,
-    crane_type: document.getElementById("c_type").value,
-    brand: document.getElementById("c_brand").value,
-    ton: document.getElementById("c_ton").value,
-    group_name: document.getElementById("c_group").value,
-    inspection_status: "미점검"
-  });
-
-  if (error) return alert(error.message);
-
-  alert("등록 완료");
-  loadCranes();
-}
-// --- 페이지별 자동 실행 ---
-document.addEventListener("DOMContentLoaded", () => {
-  // cranes.html에만 있는 tbody id
-  if (document.getElementById("craneList")) {
-    loadCranes();
-  }
-});
-
-
-window.loadCranes = loadCranes;
-window.addCrane = addCrane;
-function openCraneList() {
-  location.href = "cranes.html";
-}
-
-function openRemarkList() {
-  location.href = "remarks.html";
-}
-
-function openHoldList() {
-  location.href = "holds.html";
-}
-async function addCrane(category = "일반") {
-  await sb.from("cranes").insert({
-    crane_no: c_no.value,
-    area: c_area.value,
-    crane_type: c_type.value,
-    hoist_type: c_hoist.value,
-    brand: c_brand.value,
-    ton: c_ton.value,
-    group_name: c_group.value,
-    crane_category: category,
-    inspection_status: "미점검"
-  });
-}
-async function updateCrane(id) {
-  await sb.from("cranes")
-    .update({
-      area,
-      crane_type,
-      hoist_type,
-      brand,
-      ton,
-      group_name
-    })
-    .eq("id", id);
-}
-async function deleteCrane(id) {
-  if (!confirm("정말 삭제할까요?")) return;
-  await sb.from("cranes").delete().eq("id", id);
-}
+      <td>${c
