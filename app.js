@@ -138,3 +138,25 @@ function openRemarkList() {
 function openHoldList() {
   window.open("holds.html", "_blank");
 }
+/* =========================
+   크레인 보류 처리 (사유 입력)
+========================= */
+async function setCraneHold(id) {
+  const reason = prompt("보류 사유를 입력하세요");
+  if (!reason) return;
+
+  const { error } = await sb.from("cranes")
+    .update({
+      inspection_status: "보류",
+      hold_reason: reason
+    })
+    .eq("id", id);
+
+  if (error) return alert(error.message);
+
+  alert("보류 처리 완료");
+  loadCranes();
+}
+
+// 전역 바인딩
+window.setCraneHold = setCraneHold;
