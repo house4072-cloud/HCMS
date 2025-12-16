@@ -16,7 +16,7 @@ async function loadDashboard() {
   // 메인 페이지에만 있는 id가 없으면 실행하지 않음 (페이지 분기 핵심)
   if (!document.getElementById("d_total")) return;
 
-  const { data, error } = await sb.
+  const { data, error } = await sb
     .from("cranes")
     .select("inspection_status");
 
@@ -51,7 +51,7 @@ async function saveInspection() {
   const comment = document.getElementById("i_comment")?.value || "";
 
   // 1) 로그 저장
-  const ins = await sb..from("inspections").insert({
+  const ins = await sb.from("inspections").insert({
     crane_no,
     inspection_date: todayStr(),
     result,
@@ -65,7 +65,7 @@ async function saveInspection() {
   }
 
   // 2) cranes 상태 업데이트 (⚠️ 해당 크레인만!)
-  const up = await sb.
+  const up = await sb
     .from("cranes")
     .update({ inspection_status: result, next_inspection_date: next_due })
     .eq("crane_no", crane_no);
@@ -84,7 +84,7 @@ async function resetInspectionStatus() {
   const ok = confirm("모든 크레인의 점검 상태를 '미점검'으로 초기화합니다.\n(점검 로그는 유지됩니다)\n진행할까요?");
   if (!ok) return;
 
-  const { error } = await sb.
+  const { error } = await sb
     .from("cranes")
     .update({ inspection_status: "미점검" })
     .neq("crane_no", ""); // WHERE 필수
@@ -110,7 +110,7 @@ async function loadCranes() {
 
   const keyword = document.getElementById("filterCrane")?.value?.trim() || "";
 
-  let q = sb..from("cranes").select("*").order("crane_no");
+  let q = sb.from("cranes").select("*").order("crane_no");
   if (keyword) q = q.ilike("crane_no", `%${keyword}%`);
 
   const { data, error } = await q;
@@ -133,7 +133,7 @@ async function addCrane() {
   if (!crane_no) return alert("크레인 번호는 필수입니다.");
 
   // 중복 체크
-  const chk = await sb.
+  const chk = await sb
     .from("cranes")
     .select("id")
     .eq("crane_no", crane_no);
