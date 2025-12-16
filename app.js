@@ -70,6 +70,14 @@ async function addCrane() {
   alert("등록 완료");
   loadCranes();
 }
+// --- 페이지별 자동 실행 ---
+document.addEventListener("DOMContentLoaded", () => {
+  // cranes.html에만 있는 tbody id
+  if (document.getElementById("craneList")) {
+    loadCranes();
+  }
+});
+
 
 window.loadCranes = loadCranes;
 window.addCrane = addCrane;
