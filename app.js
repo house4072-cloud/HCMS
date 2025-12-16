@@ -94,3 +94,82 @@ window.addRemark = addRemark;
 window.resolveRemark = resolveRemark;
 window.loadRemarks = loadRemarks;
 
+async function loadRemarks(filters = {}) {
+  let query = supabase
+    .from("remarks")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  // 상태 필터
+  if (filters.status && filters.status !== "all") {
+    query = query.eq("status", filters.status);
+  }
+
+  // 크레인 번호 필터
+  if (filters.crane_no) {
+    query = query.ilike("crane_no", `%${filters.crane_no}%`);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    alert("리스트 로드 실패: " + error.message);
+    return;
+  }
+
+  const list = document.getElementById("remarkList");
+  list.innerHTML = ""; // ❗ 초기화는 여기서만
+
+  if (data.length === 0) {
+    list.innerHTML = "<p>표시할 비고가 없습니다.</p>";
+    return;
+  }
+
+  data.forEach(r => {
+    const d = document.createElement("div");
+    d.className = "remark-item";
+    d.innerHTML = `
+      <b>${r.crane_no}</b>
+      <span>(${r.status})</span>
+      <div>${r.content}</div>
+      ${
+        r.status === "open"
+          ? `<button onclick="resolveRemark('${r.id}')">해결 처리</button>`
+          : ""
+      }
+    `;
+    list.appendChild(d);
+  });
+}
+
+async function resolveRemark(id) {
+  const { error } = await supabase
+    .from("remarks")
+    .update({ status: "resolved", resolved_at: new Date() })
+    .eq("id", id);
+
+  if (error) {
+    alert("해결 처리 실패: " + error.message);
+    return;
+  }
+
+  applyFilters(); // 해결 후 재조회
+}
+
+function applyFilters() {
+  const status = document.getElementById("filterStatus").value;
+  const crane_no = document.getElementById("filterCrane").value.trim();
+
+  loadRemarks({ status, crane_no });
+}
+
+// 초기 로드 + 버튼 연결
+document.addEventListener("DOMContentLoaded", () => {
+  document
+    .getElementById("applyFilterBtn")
+    ?.addEventListener("click", applyFilters);
+
+  loadRemarks(); // 처음엔 전체 조회
+});
+
+// 전역 등록
+window.resolveRemark = resolveRemark;
