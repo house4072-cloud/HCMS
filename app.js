@@ -268,7 +268,7 @@ async function resetInspectionStatus() {
   const { error } = await supabase
     .from("cranes")
     .update({ inspection_status: "미점검" })
-    .neq("crane_no", ""); // ← 핵심 (모든 row 대상)
+    .neq("crane_no", ""); // 🔴 WHERE 역할 (필수)
 
   if (error) {
     alert("리셋 실패: " + error.message);
@@ -277,7 +277,6 @@ async function resetInspectionStatus() {
 
   alert("점검 상태가 초기화되었습니다.");
 }
-
 
 // 버튼 연결
 document.addEventListener("DOMContentLoaded", () => {
