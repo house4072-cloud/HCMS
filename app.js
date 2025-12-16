@@ -239,3 +239,18 @@ window.openHoldList = openHoldList;
 window.loadCranes = loadCranes;
 window.addCrane = addCrane;
 window.applyRemarkFilter = applyRemarkFilter;
+function openCraneList() {
+  window.open("cranes.html", "_blank");
+}
+
+function openRemarkList() {
+  window.open("remarks.html", "_blank");
+}
+
+function openHoldList() {
+  window.open("hold.html", "_blank");
+}
+
+window.openCraneList = openCraneList;
+window.openRemarkList = openRemarkList;
+window.openHoldList = openHoldList;
