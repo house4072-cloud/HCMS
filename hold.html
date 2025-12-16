@@ -2,24 +2,67 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>보류 리스트</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>HCMS | 보류 리스트</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js" type="module"></script>
+
+  <style>
+    body { font-family: Arial; padding: 20px; font-size: 17px; }
+    h1 { margin-bottom: 20px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 14px;
+      text-align: center;
+    }
+
+    tr { height: 50px; }
+    th { background: #f4f4f4; }
+  </style>
 </head>
 <body>
 
-<header class="topbar">
-  <div class="title">보류 리스트</div>
-</header>
+<h1>보류 리스트</h1>
 
-<main class="container">
-  <section class="card">
-    <h2>목록</h2>
-    <div id="holdList" class="list"></div>
-  </section>
-</main>
+<table>
+  <thead>
+    <tr>
+      <th>크레인 번호</th>
+      <th>지역</th>
+      <th>보류 사유</th>
+      <th>보류일</th>
+    </tr>
+  </thead>
+  <tbody id="holdList"></tbody>
+</table>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script src="app.js"></script>
+<script type="module">
+  document.addEventListener("DOMContentLoaded", async () => {
+    const { data, error } = await sb
+      .from("cranes")
+      .select("*")
+      .eq("inspection_status", "보류");
+
+    if (error) return alert(error.message);
+
+    const tbody = document.getElementById("holdList");
+    data.forEach(c => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${c.crane_no}</td>
+        <td>${c.area || ""}</td>
+        <td>${c.hold_reason || ""}</td>
+        <td>${c.updated_at?.slice(0,10) || ""}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+</script>
+
 </body>
 </html>
