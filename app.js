@@ -160,3 +160,97 @@ async function setCraneHold(id) {
 
 // 전역 바인딩
 window.setCraneHold = setCraneHold;
+/* =========================
+   크레인 보류 처리
+========================= */
+async function setCraneHold(id) {
+  const reason = prompt("보류 사유를 입력하세요");
+  if (!reason) return;
+
+  const { error } = await sb.from("cranes")
+    .update({
+      inspection_status: "보류",
+      hold_reason: reason
+    })
+    .eq("id", id);
+
+  if (error) return alert(error.message);
+
+  alert("보류 처리 완료");
+  loadCranes();
+}
+
+/* =========================
+   보류 해제
+========================= */
+async function releaseCraneHold(id) {
+  if (!confirm("보류를 해제하시겠습니까?")) return;
+
+  const { error } = await sb.from("cranes")
+    .update({
+      inspection_status: "미완료",
+      hold_reason: null
+    })
+    .eq("id", id);
+
+  if (error) return alert(error.message);
+
+  alert("보류 해제 완료");
+  loadCranes();
+}
+
+/* =========================
+   보류 사유 수정
+========================= */
+async function editHoldReason(id, currentReason) {
+  const reason = prompt("보류 사유 수정", currentReason);
+  if (!reason) return;
+
+  const { error } = await sb.from("cranes")
+    .update({ hold_reason: reason })
+    .eq("id", id);
+
+  if (error) return alert(error.message);
+
+  alert("사유 수정 완료");
+  loadCranes();
+}
+
+/* =========================
+   상태 카운트 계산 (대시보드용)
+========================= */
+async function loadCraneStats() {
+  const { data, error } = await sb.from("cranes").select("inspection_status");
+  if (error) return;
+
+  const stats = {
+    전체: data.length,
+    완료: 0,
+    미완료: 0,
+    보류: 0
+  };
+
+  data.forEach(c => {
+    if (stats[c.inspection_status] !== undefined) {
+      stats[c.inspection_status]++;
+    }
+  });
+
+  // HTML에 있으면 자동 반영
+  if (document.getElementById("stat_total"))
+    document.getElementById("stat_total").innerText = stats.전체;
+  if (document.getElementById("stat_done"))
+    document.getElementById("stat_done").innerText = stats.완료;
+  if (document.getElementById("stat_pending"))
+    document.getElementById("stat_pending").innerText = stats.미완료;
+  if (document.getElementById("stat_hold"))
+    document.getElementById("stat_hold").innerText = stats.보류;
+}
+
+/* =========================
+   전역 바인딩
+========================= */
+window.setCraneHold = setCraneHold;
+window.releaseCraneHold = releaseCraneHold;
+window.editHoldReason = editHoldReason;
+window.loadCraneStats = loadCraneStats;
