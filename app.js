@@ -1,6 +1,6 @@
-// ===== Supabase 초기화 (KEY / URL 직접 입력) =====
-const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA";
+// ===== Supabase 초기화 (TEST) =====
+const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co"; // 네가 입력
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA"; // 네가 입력
 
 const sb = supabase.createClient(
   SUPABASE_URL,
@@ -31,7 +31,7 @@ async function loadCranes() {
   if (error) return alert(error.message);
 
   const tbody = document.getElementById("craneList");
-  if (!tbody) return;
+  if (!tbody) return; // 다른 페이지에서 호출돼도 에러 안 나게
 
   tbody.innerHTML = "";
 
@@ -40,4 +40,101 @@ async function loadCranes() {
     tr.innerHTML = `
       <td>${c.crane_no}</td>
       <td>${c.area || ""}</td>
-      <td>${c
+      <td>${c.crane_type || ""}</td>
+      <td>${c.brand || ""}</td>
+      <td>${c.ton || ""}</td>
+      <td>${c.group_name || ""}</td>
+      <td>${c.inspection_status || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* =========================
+   크레인 등록  ✅ (중복 선언 제거: 이 함수 하나만 남김)
+========================= */
+async function addCrane(category = "일반") {
+  const crane_no = document.getElementById("c_no")?.value?.trim();
+  if (!crane_no) return alert("크레인 번호 필수");
+
+  const { error } = await sb.from("cranes").insert({
+    crane_no,
+    area: document.getElementById("c_area")?.value || null,
+    crane_type: document.getElementById("c_type")?.value || null,
+    hoist_type: document.getElementById("c_hoist")?.value || null,
+    brand: document.getElementById("c_brand")?.value || null,
+    ton: document.getElementById("c_ton")?.value || null,
+    group_name: document.getElementById("c_group")?.value || null,
+    crane_category: category,
+    inspection_status: "미점검"
+  });
+
+  if (error) return alert(error.message);
+
+  alert("등록 완료");
+  loadCranes();
+}
+
+/* =========================
+   크레인 수정 ✅ (미정의 변수 ReferenceError 방지)
+   - 기존 코드: area, crane_type... 변수가 선언되지 않아 에러
+   - 수정: DOM에서 값을 읽어서 payload로 업데이트
+========================= */
+async function updateCrane(id) {
+  const payload = {
+    area: document.getElementById("c_area")?.value || null,
+    crane_type: document.getElementById("c_type")?.value || null,
+    hoist_type: document.getElementById("c_hoist")?.value || null,
+    brand: document.getElementById("c_brand")?.value || null,
+    ton: document.getElementById("c_ton")?.value || null,
+    group_name: document.getElementById("c_group")?.value || null
+  };
+
+  const { error } = await sb.from("cranes")
+    .update(payload)
+    .eq("id", id);
+
+  if (error) return alert(error.message);
+
+  alert("수정 완료");
+  loadCranes();
+}
+
+/* =========================
+   크레인 삭제 (유지)
+========================= */
+async function deleteCrane(id) {
+  if (!confirm("정말 삭제할까요?")) return;
+
+  const { error } = await sb.from("cranes").delete().eq("id", id);
+  if (error) return alert(error.message);
+
+  alert("삭제 완료");
+  loadCranes();
+}
+
+// --- 페이지별 자동 실행 --- (유지)
+document.addEventListener("DOMContentLoaded", () => {
+  // cranes.html에만 있는 tbody id
+  if (document.getElementById("craneList")) {
+    loadCranes();
+  }
+});
+
+window.loadCranes = loadCranes;
+window.addCrane = addCrane;
+window.updateCrane = updateCrane;
+window.deleteCrane = deleteCrane;
+
+// 페이지 이동 (원래대로 유지)
+function openCraneList() {
+  location.href = "cranes.html";
+}
+
+function openRemarkList() {
+  location.href = "remarks.html";
+}
+
+function openHoldList() {
+  location.href = "holds.html";
+}
