@@ -6,7 +6,6 @@ const sb = supabase.createClient(
   supabase_ANON_KEY
 );
 
-
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
