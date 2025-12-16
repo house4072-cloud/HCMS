@@ -1,7 +1,7 @@
 // ✅ Supabase 연결 (네 키 그대로 유지)
 const supabase = supabase.createClient(
-  "https://네프로젝트.supabase.co",
-  "네 anon key"
+  "https://lzfksuiftgmxwkhwhnhg.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA"
 );
 
 /* =========================
