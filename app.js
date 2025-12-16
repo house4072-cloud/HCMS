@@ -145,3 +145,17 @@ async function addCrane() {
 }
 
 window.addCrane = addCrane;
+document.addEventListener("DOMContentLoaded", () => {
+
+  // 메인(index.html)에서만 대시보드 로드
+  if (document.getElementById("dashboard")) {
+    loadDashboard();
+  }
+
+  // 크레인 리스트 페이지에서만 실행
+  if (document.getElementById("craneList")) {
+    loadCranes();
+  }
+
+});
+window.addCrane = addCrane;
