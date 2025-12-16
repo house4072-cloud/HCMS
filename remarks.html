@@ -2,36 +2,67 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>비고 리스트</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>HCMS | 비고 리스트</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js" type="module"></script>
+
+  <style>
+    body { font-family: Arial; padding: 20px; font-size: 17px; }
+    h1 { margin-bottom: 20px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 14px;
+      text-align: center;
+    }
+
+    tr { height: 50px; }
+    th { background: #f4f4f4; }
+  </style>
 </head>
 <body>
 
-<header class="topbar">
-  <div class="title">비고 리스트</div>
-</header>
+<h1>비고 리스트</h1>
 
-<main class="container">
-  <section class="card">
-    <h2>필터</h2>
-    <div class="btn-row">
-      <select id="filterRemarkStatus" class="input">
-        <option value="all">전체</option>
-        <option value="open">미해결</option>
-        <option value="resolved">해결</option>
-      </select>
-      <button class="btn" onclick="applyRemarkFilter()">적용</button>
-    </div>
-  </section>
+<table>
+  <thead>
+    <tr>
+      <th>크레인 번호</th>
+      <th>비고 내용</th>
+      <th>작성일</th>
+      <th>해결 여부</th>
+    </tr>
+  </thead>
+  <tbody id="remarkList"></tbody>
+</table>
 
-  <section class="card">
-    <h2>목록</h2>
-    <div id="remarkList" class="list"></div>
-  </section>
-</main>
+<script type="module">
+  document.addEventListener("DOMContentLoaded", async () => {
+    const { data, error } = await sb
+      .from("remarks")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script src="app.js"></script>
+    if (error) return alert(error.message);
+
+    const tbody = document.getElementById("remarkList");
+    data.forEach(r => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${r.crane_no}</td>
+        <td>${r.content}</td>
+        <td>${r.created_at?.slice(0,10)}</td>
+        <td>${r.resolved ? "해결" : "미해결"}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+</script>
+
 </body>
 </html>
