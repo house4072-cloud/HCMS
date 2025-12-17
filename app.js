@@ -28,4 +28,189 @@ async function loadCranes() {
   if (status) query = query.eq("inspection_status", status);
 
   const { data, error } = await query;
-  if (erro
+  if (error) return alert(error.message);
+
+  const tbody = document.getElementById("craneList");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  data.forEach(c => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${c.crane_no}</td>
+      <td>${c.area || ""}</td>
+      <td>${c.crane_type || ""}</td>
+      <td>${c.brand || ""}</td>
+      <td>${c.ton || ""}</td>
+      <td>${c.group_name || ""}</td>
+      <td>${c.inspection_status || ""}</td>
+      <td>
+        ${
+          c.inspection_status === "보류"
+            ? `
+              <button onclick="releaseCraneHold(${c.id})">해제</button>
+              <button onclick="editHoldReason(${c.id}, '${c.hold_reason || ""}')">사유수정</button>
+            `
+            : `<button onclick="setCraneHold(${c.id})">보류</button>`
+        }
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* =========================
+   크레인 등록
+========================= */
+async function addCrane(category = "일반") {
+  const crane_no = document.getElementById("c_no")?.value?.trim();
+  if (!crane_no) return alert("크레인 번호 필수");
+
+  const { error } = await sb.from("cranes").insert({
+    crane_no,
+    area: document.getElementById("c_area")?.value || null,
+    crane_type: document.getElementById("c_type")?.value || null,
+    hoist_type: document.getElementById("c_hoist")?.value || null,
+    brand: document.getElementById("c_brand")?.value || null,
+    ton: document.getElementById("c_ton")?.value || null,
+    group_name: document.getElementById("c_group")?.value || null,
+    crane_category: category,
+    inspection_status: "미완료"
+  });
+
+  if (error) return alert(error.message);
+
+  alert("등록 완료");
+  loadCranes();
+}
+
+/* =========================
+   크레인 수정
+========================= */
+async function updateCrane(id) {
+  const payload = {
+    area: document.getElementById("c_area")?.value || null,
+    crane_type: document.getElementById("c_type")?.value || null,
+    hoist_type: document.getElementById("c_hoist")?.value || null,
+    brand: document.getElementById("c_brand")?.value || null,
+    ton: document.getElementById("c_ton")?.value || null,
+    group_name: document.getElementById("c_group")?.value || null
+  };
+
+  const { error } = await sb.from("cranes")
+    .update(payload)
+    .eq("id", id);
+
+  if (error) return alert(error.message);
+
+  alert("수정 완료");
+  loadCranes();
+}
+
+/* =========================
+   크레인 삭제
+========================= */
+async function deleteCrane(id) {
+  if (!confirm("정말 삭제할까요?")) return;
+
+  const { error } = await sb.from("cranes")
+    .delete()
+    .eq("id", id);
+
+  if (error) return alert(error.message);
+
+  alert("삭제 완료");
+  loadCranes();
+}
+
+/* =========================
+   보류 처리
+========================= */
+async function setCraneHold(id) {
+  const reason = prompt("보류 사유를 입력하세요");
+  if (!reason) return;
+
+  const { error } = await sb.from("cranes")
+    .update({
+      inspection_status: "보류",
+      hold_reason: reason
+    })
+    .eq("id", id);
+
+  if (error) return alert(error.message);
+
+  alert("보류 처리 완료");
+  loadCranes();
+}
+
+/* =========================
+   보류 해제
+========================= */
+async function releaseCraneHold(id) {
+  if (!confirm("보류를 해제하시겠습니까?")) return;
+
+  const { error } = await sb.from("cranes")
+    .update({
+      inspection_status: "미완료",
+      hold_reason: null
+    })
+    .eq("id", id);
+
+  if (error) return alert(error.message);
+
+  alert("보류 해제 완료");
+  loadCranes();
+}
+
+/* =========================
+   보류 사유 수정
+========================= */
+async function editHoldReason(id, currentReason) {
+  const reason = prompt("보류 사유 수정", currentReason);
+  if (!reason) return;
+
+  const { error } = await sb.from("cranes")
+    .update({ hold_reason: reason })
+    .eq("id", id);
+
+  if (error) return alert(error.message);
+
+  alert("사유 수정 완료");
+  loadCranes();
+}
+
+/* =========================
+   자동 실행
+========================= */
+document.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("craneList")) {
+    loadCranes();
+  }
+});
+
+/* =========================
+   페이지 이동
+========================= */
+function openCraneList() {
+  window.open("cranes.html", "_blank");
+}
+
+function openRemarkList() {
+  window.open("remarks.html", "_blank");
+}
+
+function openHoldList() {
+  window.open("holds.html", "_blank");
+}
+
+/* =========================
+   전역 바인딩 (딱 1번)
+========================= */
+window.loadCranes = loadCranes;
+window.addCrane = addCrane;
+window.updateCrane = updateCrane;
+window.deleteCrane = deleteCrane;
+window.setCraneHold = setCraneHold;
+window.releaseCraneHold = releaseCraneHold;
+window.editHoldReason = editHoldReason;
