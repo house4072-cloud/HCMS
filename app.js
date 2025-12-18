@@ -277,3 +277,4 @@ window.toggleHoistDetail = toggleHoistDetail;
 window.openCraneList = openCraneList;
 window.openRemarkList = openRemarkList;
 window.openHoldList = openHoldList;
+window.autoCraneNoPrefix = autoCraneNoPrefix;
