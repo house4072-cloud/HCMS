@@ -79,16 +79,48 @@
 <!-- 크레인 등록 -->
 <h3>크레인 등록</h3>
 <div class="add-box">
- <input id="c_no" placeholder="크레인 번호" />
-<input id="c_area" placeholder="지역" />
-<input id="c_type" placeholder="크레인 타입" />
-<input id="c_hoist" placeholder="호이스트 타입" />
-<input id="c_brand" placeholder="브랜드" />
-<input id="c_ton" placeholder="톤수" />
-<input id="c_group" placeholder="그룹" />
+
+  <input id="c_no" placeholder="크레인 번호" />
+
+  <input id="c_area" placeholder="지역" />
+
+  <!-- 크레인 타입 (영문 고정) -->
+  <select id="c_type">
+    <option value="">크레인 타입</option>
+    <option value="EOT">EOT</option>
+    <option value="Suspension">Suspension</option>
+    <option value="Gantry">Gantry</option>
+    <option value="Post">Post</option>
+    <option value="Wall">Wall</option>
+    <option value="Monorail">Monorail</option>
+  </select>
+
+  <!-- 호이스트 종류 -->
+  <select id="c_hoist_type" onchange="toggleHoistDetail()">
+    <option value="">호이스트 타입</option>
+    <option value="Wire">Wire</option>
+    <option value="Chain">Chain</option>
+  </select>
+
+  <!-- Wire 전용 -->
+  <input id="c_wire_dia" placeholder="와이어 파이 (숫자)" style="display:none;" />
+  <input id="c_wire_len" placeholder="와이어 길이 M (숫자)" style="display:none;" />
+
+  <!-- 공통 (싱글/더블) -->
+  <select id="c_reeving" style="display:none;">
+    <option value="">권상 방식</option>
+    <option value="Single">Single</option>
+    <option value="Double">Double</option>
+  </select>
+
+  <input id="c_brand" placeholder="브랜드" />
+  <input id="c_ton" placeholder="톤수" />
+  <input id="c_group" placeholder="그룹" />
+
 </div>
 
 <button onclick="addCrane()">크레인 등록</button>
+
 
 <hr />
 
