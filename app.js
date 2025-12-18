@@ -1,7 +1,6 @@
 // ===== Supabase 초기화 =====
 const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA";
-
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* =========================
@@ -161,12 +160,10 @@ async function deleteCrane(id) {
 async function setCraneHold(id) {
   const reason = prompt("보류 사유");
   if (!reason) return;
-
   await sb.from("cranes").update({
     inspection_status: "보류",
     hold_reason: reason
   }).eq("id", id);
-
   loadCranes();
 }
 
@@ -175,7 +172,6 @@ async function releaseCraneHold(id) {
     inspection_status: "미완료",
     hold_reason: null
   }).eq("id", id);
-
   loadCranes();
 }
 
@@ -190,11 +186,27 @@ function toggleHoistDetail() {
 }
 
 function clearCraneForm() {
-  ["c_no","c_area","c_type","c_brand","c_ton","c_group","c_hoist_type","c_wire_dia","c_wire_len","c_reeving"]
-    .forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = "";
-    });
+  [
+    "c_no","c_area","c_type","c_brand","c_ton",
+    "c_group","c_hoist_type","c_wire_dia",
+    "c_wire_len","c_reeving"
+  ].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+}
+
+/* =========================
+   페이지 이동 (리스트 열기)
+========================= */
+function openCraneList() {
+  window.open("cranes.html", "_blank");
+}
+function openRemarkList() {
+  window.open("remarks.html", "_blank");
+}
+function openHoldList() {
+  window.open("holds.html", "_blank");
 }
 
 /* =========================
@@ -209,8 +221,11 @@ document.addEventListener("DOMContentLoaded", () => {
 ========================= */
 window.loadCranes = loadCranes;
 window.addCrane = addCrane;
-window.deleteCrane = deleteCrane;
 window.loadCraneToForm = loadCraneToForm;
+window.deleteCrane = deleteCrane;
 window.setCraneHold = setCraneHold;
 window.releaseCraneHold = releaseCraneHold;
 window.toggleHoistDetail = toggleHoistDetail;
+window.openCraneList = openCraneList;
+window.openRemarkList = openRemarkList;
+window.openHoldList = openHoldList;
