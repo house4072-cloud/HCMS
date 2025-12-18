@@ -203,6 +203,27 @@ function openRemarkList() {
 function openHoldList() {
   window.open("holds.html", "_blank");
 }
+function toggleHoistDetail() {
+  const type = document.getElementById("c_hoist_type").value;
+
+  const dia = document.getElementById("c_wire_dia");
+  const len = document.getElementById("c_wire_len");
+  const reeving = document.getElementById("c_reeving");
+
+  if (type === "Wire") {
+    dia.style.display = "block";
+    len.style.display = "block";
+    reeving.style.display = "block";
+  } else if (type === "Chain") {
+    dia.style.display = "none";
+    len.style.display = "none";
+    reeving.style.display = "block";
+  } else {
+    dia.style.display = "none";
+    len.style.display = "none";
+    reeving.style.display = "none";
+  }
+}
 
 /* =========================
    전역 바인딩 (딱 1번)
@@ -214,3 +235,4 @@ window.deleteCrane = deleteCrane;
 window.setCraneHold = setCraneHold;
 window.releaseCraneHold = releaseCraneHold;
 window.editHoldReason = editHoldReason;
+window.toggleHoistDetail = toggleHoistDetail;
