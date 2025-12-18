@@ -20,7 +20,7 @@ async function loadCranes() {
   if (area) query = query.ilike("area", `%${area}%`);
   if (type) query = query.eq("crane_type", type);
   if (brand) query = query.ilike("brand", `%${brand}%`);
-  if (ton) query = query.eq("ton", ton);
+  if (ton) query = query.eq("ton", Number(ton));
   if (status) query = query.eq("inspection_status", status);
 
   const { data, error } = await query;
@@ -37,7 +37,7 @@ async function loadCranes() {
       <td>${c.area || ""}</td>
       <td>${c.crane_type || ""}</td>
       <td>${c.brand || ""}</td>
-      <td>${c.ton || ""}</td>
+      <td>${c.ton ?? ""}</td>
       <td>${c.hoist_type ? `${c.hoist_type} ${c.hoist_spec || ""}` : ""}</td>
       <td>${c.group_name || ""}</td>
       <td>${c.inspection_status || ""}</td>
@@ -64,38 +64,41 @@ async function addCrane(category = "일반") {
   const crane_no = document.getElementById("c_no")?.value?.trim();
   if (!crane_no) return alert("크레인 번호 필수");
 
-  const hoistType = document.getElementById("c_hoist_type")?.value;
-  const reeving = document.getElementById("c_reeving")?.value;
+  const hoistType =
+    document.getElementById("c_hoist_type")?.value ||
+    document.getElementById("c_hoist")?.value ||
+    null;
+
+  const reeving = document.getElementById("c_reeving")?.value || null;
+  const diaRaw = document.getElementById("c_wire_dia")?.value || null;
+  const lenRaw = document.getElementById("c_wire_len")?.value || null;
 
   let hoistSpec = null;
 
   if (hoistType === "Wire") {
-    const dia = document.getElementById("c_wire_dia")?.value;
-    const len = document.getElementById("c_wire_len")?.value;
-    if (!dia || !len || !reeving) {
-      return alert("와이어 파이 / 길이 / 싱글·더블 필수");
-    }
-    hoistSpec = `Φ${dia} ${len}M ${reeving}`;
+    const parts = [];
+    if (diaRaw) parts.push(`Φ${diaRaw}`);
+    if (lenRaw) parts.push(`${lenRaw}M`);
+    if (reeving) parts.push(reeving);
+    hoistSpec = parts.length ? parts.join(" ") : null;
+  } else if (hoistType === "Chain") {
+    hoistSpec = reeving || null;
   }
 
-  if (hoistType === "Chain") {
-    if (!reeving) return alert("체인 싱글/더블 선택");
-    hoistSpec = reeving;
-  }
+  const tonRaw = document.getElementById("c_ton")?.value;
+  const ton = tonRaw ? Number(tonRaw) : null;
 
   const payload = {
     crane_no,
     area: document.getElementById("c_area")?.value || null,
     crane_type: document.getElementById("c_type")?.value || null,
     brand: document.getElementById("c_brand")?.value || null,
-    ton: document.getElementById("c_ton")?.value
-      ? Number(document.getElementById("c_ton").value)
-      : null,
+    ton,
     group_name: document.getElementById("c_group")?.value || null,
-    hoist_type: hoistType || null,
+    hoist_type: hoistType,
     hoist_spec: hoistSpec,
-    crane_category: category,
-    inspection_status: "미완료"
+    crane_category: category
+    // 🔥 inspection_status는 DB 기본값(미점검) 사용
   };
 
   let result;
@@ -126,7 +129,7 @@ async function loadCraneToForm(id) {
   document.getElementById("c_area").value = data.area || "";
   document.getElementById("c_type").value = data.crane_type || "";
   document.getElementById("c_brand").value = data.brand || "";
-  document.getElementById("c_ton").value = data.ton || "";
+  document.getElementById("c_ton").value = data.ton ?? "";
   document.getElementById("c_group").value = data.group_name || "";
   document.getElementById("c_hoist_type").value = data.hoist_type || "";
 
@@ -135,11 +138,11 @@ async function loadCraneToForm(id) {
   if (data.hoist_spec) {
     const parts = data.hoist_spec.split(" ");
     if (data.hoist_type === "Wire") {
-      document.getElementById("c_wire_dia").value = parts[0].replace("Φ", "");
-      document.getElementById("c_wire_len").value = parts[1].replace("M", "");
-      document.getElementById("c_reeving").value = parts[2];
+      document.getElementById("c_wire_dia").value = parts[0]?.replace("Φ", "") || "";
+      document.getElementById("c_wire_len").value = parts[1]?.replace("M", "") || "";
+      document.getElementById("c_reeving").value = parts[2] || "";
     } else {
-      document.getElementById("c_reeving").value = parts[0];
+      document.getElementById("c_reeving").value = parts[0] || "";
     }
   }
 }
@@ -179,10 +182,14 @@ async function releaseCraneHold(id) {
    UI 보조
 ========================= */
 function toggleHoistDetail() {
-  const type = document.getElementById("c_hoist_type").value;
-  document.getElementById("c_wire_dia").style.display = type === "Wire" ? "block" : "none";
-  document.getElementById("c_wire_len").style.display = type === "Wire" ? "block" : "none";
-  document.getElementById("c_reeving").style.display = type ? "block" : "none";
+  const type = document.getElementById("c_hoist_type")?.value;
+  const dia = document.getElementById("c_wire_dia");
+  const len = document.getElementById("c_wire_len");
+  const reeving = document.getElementById("c_reeving");
+
+  if (dia) dia.style.display = type === "Wire" ? "block" : "none";
+  if (len) len.style.display = type === "Wire" ? "block" : "none";
+  if (reeving) reeving.style.display = type ? "block" : "none";
 }
 
 function clearCraneForm() {
@@ -197,7 +204,7 @@ function clearCraneForm() {
 }
 
 /* =========================
-   페이지 이동 (리스트 열기)
+   페이지 이동
 ========================= */
 function openCraneList() {
   window.open("cranes.html", "_blank");
