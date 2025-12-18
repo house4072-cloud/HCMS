@@ -262,7 +262,25 @@ function openHoldList() {
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("craneList")) loadCranes();
 });
+/* =========================
+   크레인 번호 자동 C- 접두 (입력 종료 시)
+========================= */
+function autoCraneNoPrefix() {
+  const el = document.getElementById("c_no");
+  if (!el) return;
 
+  let v = el.value.trim();
+  if (!v) return;
+
+  // 이미 C-로 시작하면 그대로
+  if (v.toUpperCase().startsWith("C-")) return;
+
+  // 숫자만 입력했을 때만 자동 접두
+  if (/^\d+$/.test(v)) {
+    el.value = `C-${v}`;
+  }
+}
+window.autoCraneNoPrefix = autoCraneNoPrefix;
 /* =========================
    전역 바인딩
 ========================= */
@@ -277,4 +295,4 @@ window.toggleHoistDetail = toggleHoistDetail;
 window.openCraneList = openCraneList;
 window.openRemarkList = openRemarkList;
 window.openHoldList = openHoldList;
-window.autoCraneNoPrefix = autoCraneNoPrefix;
+
