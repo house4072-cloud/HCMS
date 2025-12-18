@@ -51,7 +51,7 @@ async function loadCranes() {
         <button onclick="deleteCrane('${c.id}')">삭제</button>
       </td>
     `;
-    tbody.appendChild(tr); // ✅ FIX 1
+    tbody.appendChild(tr);
   });
 }
 
@@ -61,8 +61,13 @@ async function loadCranes() {
 let editingCraneId = null;
 
 async function addCrane(category = "일반") {
-  const crane_no = document.getElementById("c_no")?.value?.trim();
+  let crane_no = document.getElementById("c_no")?.value?.trim();
   if (!crane_no) return alert("크레인 번호 필수");
+
+  // ✅ 숫자 입력 시 C- 자동 보정
+  if (/^\d+$/.test(crane_no)) {
+    crane_no = `C-${crane_no}`;
+  }
 
   const hoistType =
     document.getElementById("c_hoist_type")?.value ||
@@ -88,7 +93,6 @@ async function addCrane(category = "일반") {
   const tonRaw = document.getElementById("c_ton")?.value;
   const ton = tonRaw ? Number(tonRaw) : null;
 
-  // ✅ undefined 제거 (FIX 2)
   const payload = {
     crane_no,
     area: document.getElementById("c_area")?.value || null,
@@ -105,26 +109,13 @@ async function addCrane(category = "일반") {
     ? await sb.from("cranes").update(payload).eq("id", editingCraneId)
     : await sb.from("cranes").insert(payload);
 
-  if (result.error) {
-    console.error("INSERT ERROR:", result.error);
-    return alert(result.error.message);
-  }
+  if (result.error) return alert(result.error.message);
 
   alert(editingCraneId ? "수정 완료" : "등록 완료");
   editingCraneId = null;
   clearCraneForm();
   loadCranes();
 }
-
-/* =========================
-   이하 기존 코드 그대로 (변경 없음)
-========================= */
-// loadCraneToForm, deleteCrane, setCraneHold,
-// releaseCraneHold, toggleHoistDetail, clearCraneForm,
-// openCraneList, openRemarkList, openHoldList,
-// DOMContentLoaded, window 바인딩
-// 👉 네가 올린 코드 그대로 유지
-
 
 /* =========================
    수정용 데이터 로드
@@ -189,6 +180,45 @@ async function releaseCraneHold(id) {
 }
 
 /* =========================
+   메인 점검 완료 (오류 해결)
+========================= */
+async function saveInspection() {
+  const input =
+    document.getElementById("inspect_no") ||
+    document.getElementById("i_no") ||
+    document.getElementById("crane_no_input");
+
+  if (!input) return alert("메인 크레인 번호 입력칸 id 확인 필요");
+  let crane_no = input.value.trim();
+  if (!crane_no) return alert("크레인 번호 입력");
+
+  if (/^\d+$/.test(crane_no)) {
+    crane_no = `C-${crane_no}`;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const next = new Date();
+  next.setMonth(next.getMonth() + 3);
+  const next_due = next.toISOString().slice(0, 10);
+
+  const up = await sb.from("cranes").update({
+    inspection_status: "완료",
+    next_inspection_date: next_due
+  }).eq("crane_no", crane_no);
+
+  if (up.error) return alert(up.error.message);
+
+  await sb.from("inspections").insert({
+    crane_no,
+    inspection_date: today,
+    result: "완료",
+    next_due
+  });
+
+  alert(`점검 완료: ${crane_no}`);
+}
+
+/* =========================
    UI 보조
 ========================= */
 function toggleHoistDetail() {
@@ -242,6 +272,7 @@ window.loadCraneToForm = loadCraneToForm;
 window.deleteCrane = deleteCrane;
 window.setCraneHold = setCraneHold;
 window.releaseCraneHold = releaseCraneHold;
+window.saveInspection = saveInspection;
 window.toggleHoistDetail = toggleHoistDetail;
 window.openCraneList = openCraneList;
 window.openRemarkList = openRemarkList;
