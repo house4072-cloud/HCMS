@@ -181,7 +181,7 @@ async function saveInspection() {
     craneUpdate.hold_reason = comment || "메인 입력 보류";
   }
 
-  await sb.from("cranes").update(craneUpdate).eq("crane_no", crane_no);
+  await sb.from("cranes").update(craneUpdate).eq("id", craneRow.id);
 
   const inspectionPayload = {
     crane_no,
