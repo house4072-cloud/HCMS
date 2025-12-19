@@ -64,10 +64,7 @@ async function addCrane(category = "일반") {
   let crane_no = document.getElementById("c_no")?.value?.trim();
   if (!crane_no) return alert("크레인 번호 필수");
 
-  // ✅ 숫자 입력 시 C- 자동 보정
-  if (/^\d+$/.test(crane_no)) {
-    crane_no = `C-${crane_no}`;
-  }
+  if (/^\d+$/.test(crane_no)) crane_no = `C-${crane_no}`;
 
   const hoistType =
     document.getElementById("c_hoist_type")?.value ||
@@ -79,15 +76,14 @@ async function addCrane(category = "일반") {
   const lenRaw = document.getElementById("c_wire_len")?.value || null;
 
   let hoistSpec = null;
-
   if (hoistType === "Wire") {
     const parts = [];
     if (diaRaw) parts.push(`Φ${diaRaw}`);
     if (lenRaw) parts.push(`${lenRaw}M`);
     if (reeving) parts.push(reeving);
-    hoistSpec = parts.length ? parts.join(" ") : null;
+    hoistSpec = parts.join(" ");
   } else if (hoistType === "Chain") {
-    hoistSpec = reeving || null;
+    hoistSpec = reeving;
   }
 
   const tonRaw = document.getElementById("c_ton")?.value;
@@ -100,8 +96,8 @@ async function addCrane(category = "일반") {
     brand: document.getElementById("c_brand")?.value || null,
     ton,
     group_name: document.getElementById("c_group")?.value || null,
-    hoist_type: hoistType || null,
-    hoist_spec: hoistSpec || null,
+    hoist_type: hoistType,
+    hoist_spec: hoistSpec,
     crane_category: category
   };
 
@@ -118,14 +114,13 @@ async function addCrane(category = "일반") {
 }
 
 /* =========================
-   수정용 데이터 로드
+   수정용 로드 / 삭제 / 보류
 ========================= */
 async function loadCraneToForm(id) {
-  const { data, error } = await sb.from("cranes").select("*").eq("id", id).single();
-  if (error) return alert(error.message);
+  const { data } = await sb.from("cranes").select("*").eq("id", id).single();
+  if (!data) return;
 
   editingCraneId = id;
-
   document.getElementById("c_no").value = data.crane_no || "";
   document.getElementById("c_area").value = data.area || "";
   document.getElementById("c_type").value = data.crane_type || "";
@@ -133,34 +128,15 @@ async function loadCraneToForm(id) {
   document.getElementById("c_ton").value = data.ton ?? "";
   document.getElementById("c_group").value = data.group_name || "";
   document.getElementById("c_hoist_type").value = data.hoist_type || "";
-
   toggleHoistDetail();
-
-  if (data.hoist_spec) {
-    const parts = data.hoist_spec.split(" ");
-    if (data.hoist_type === "Wire") {
-      document.getElementById("c_wire_dia").value = parts[0]?.replace("Φ", "") || "";
-      document.getElementById("c_wire_len").value = parts[1]?.replace("M", "") || "";
-      document.getElementById("c_reeving").value = parts[2] || "";
-    } else {
-      document.getElementById("c_reeving").value = parts[0] || "";
-    }
-  }
 }
 
-/* =========================
-   삭제
-========================= */
 async function deleteCrane(id) {
   if (!confirm("정말 삭제할까요?")) return;
-  const { error } = await sb.from("cranes").delete().eq("id", id);
-  if (error) return alert(error.message);
+  await sb.from("cranes").delete().eq("id", id);
   loadCranes();
 }
 
-/* =========================
-   보류 처리
-========================= */
 async function setCraneHold(id) {
   const reason = prompt("보류 사유");
   if (!reason) return;
@@ -180,107 +156,95 @@ async function releaseCraneHold(id) {
 }
 
 /* =========================
-   메인 점검 완료 (오류 해결)
+   🔥 메인(index.html) 전용 기능 추가
 ========================= */
-async function saveInspection() {
-  const input =
-    document.getElementById("inspect_no") ||
-    document.getElementById("i_no") ||
-    document.getElementById("crane_no_input");
+async function loadDashboard() {
+  const { data } = await sb.from("cranes").select("inspection_status");
+  if (!data) return;
 
-  if (!input) return alert("메인 크레인 번호 입력칸 id 확인 필요");
-  let crane_no = input.value.trim();
+  let total = data.length, done = 0, hold = 0, fail = 0, none = 0;
+  data.forEach(c => {
+    if (c.inspection_status === "완료") done++;
+    else if (c.inspection_status === "보류") hold++;
+    else if (c.inspection_status === "미완") fail++;
+    else none++;
+  });
+
+  document.getElementById("d_total") && (d_total.innerText = total);
+  document.getElementById("d_done") && (d_done.innerText = done);
+  document.getElementById("d_hold") && (d_hold.innerText = hold);
+  document.getElementById("d_fail") && (d_fail.innerText = fail);
+  document.getElementById("d_none") && (d_none.innerText = none);
+}
+
+async function saveInspection() {
+  let crane_no = document.getElementById("i_crane_no")?.value?.trim();
   if (!crane_no) return alert("크레인 번호 입력");
 
-  if (/^\d+$/.test(crane_no)) {
-    crane_no = `C-${crane_no}`;
+  if (/^\d+$/.test(crane_no)) crane_no = `C-${crane_no}`;
+
+  const result = document.getElementById("i_result")?.value || "완료";
+  const comment = document.getElementById("i_comment")?.value || null;
+
+  let next_due = document.getElementById("i_next")?.value;
+  if (!next_due && result === "완료") {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 3);
+    next_due = d.toISOString().slice(0, 10);
   }
 
-  const today = new Date().toISOString().slice(0, 10);
-  const next = new Date();
-  next.setMonth(next.getMonth() + 3);
-  const next_due = next.toISOString().slice(0, 10);
-
-  const up = await sb.from("cranes").update({
-    inspection_status: "완료",
+  await sb.from("cranes").update({
+    inspection_status: result,
     next_inspection_date: next_due
   }).eq("crane_no", crane_no);
 
-  if (up.error) return alert(up.error.message);
-
   await sb.from("inspections").insert({
     crane_no,
-    inspection_date: today,
-    result: "완료",
+    inspection_date: new Date().toISOString().slice(0, 10),
+    result,
+    comment,
     next_due
   });
 
-  alert(`점검 완료: ${crane_no}`);
+  alert("점검 저장 완료");
+  loadDashboard();
+}
+
+async function resetInspectionStatus() {
+  if (!confirm("분기 리셋 하시겠습니까?")) return;
+  await sb.from("cranes").update({ inspection_status: "미점검" });
+  loadDashboard();
 }
 
 /* =========================
-   UI 보조
+   UI / 공통
 ========================= */
 function toggleHoistDetail() {
   const type = document.getElementById("c_hoist_type")?.value;
-  const dia = document.getElementById("c_wire_dia");
-  const len = document.getElementById("c_wire_len");
-  const reeving = document.getElementById("c_reeving");
-
-  if (dia) dia.style.display = type === "Wire" ? "block" : "none";
-  if (len) len.style.display = type === "Wire" ? "block" : "none";
-  if (reeving) reeving.style.display = type ? "block" : "none";
+  document.getElementById("c_wire_dia") && (c_wire_dia.style.display = type === "Wire" ? "block" : "none");
+  document.getElementById("c_wire_len") && (c_wire_len.style.display = type === "Wire" ? "block" : "none");
+  document.getElementById("c_reeving") && (c_reeving.style.display = type ? "block" : "none");
 }
 
 function clearCraneForm() {
-  [
-    "c_no","c_area","c_type","c_brand","c_ton",
-    "c_group","c_hoist_type","c_wire_dia",
-    "c_wire_len","c_reeving"
-  ].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = "";
-  });
+  ["c_no","c_area","c_type","c_brand","c_ton","c_group","c_hoist_type","c_wire_dia","c_wire_len","c_reeving"]
+    .forEach(id => document.getElementById(id) && (document.getElementById(id).value = ""));
 }
 
 /* =========================
    페이지 이동
 ========================= */
-function openCraneList() {
-  window.open("cranes.html", "_blank");
-}
-function openRemarkList() {
-  window.open("remarks.html", "_blank");
-}
-function openHoldList() {
-  window.open("holds.html", "_blank");
-}
+function openCraneList() { window.open("cranes.html", "_blank"); }
+function openRemarkList() { window.open("remarks.html", "_blank"); }
+function openHoldList() { window.open("holds.html", "_blank"); }
 
 /* =========================
    자동 실행
 ========================= */
 document.addEventListener("DOMContentLoaded", () => {
-  if (document.getElementById("craneList")) loadCranes();
+  loadDashboard();
 });
-/* =========================
-   크레인 번호 자동 C- 접두 (입력 종료 시)
-========================= */
-function autoCraneNoPrefix() {
-  const el = document.getElementById("c_no");
-  if (!el) return;
 
-  let v = el.value.trim();
-  if (!v) return;
-
-  // 이미 C-로 시작하면 그대로
-  if (v.toUpperCase().startsWith("C-")) return;
-
-  // 숫자만 입력했을 때만 자동 접두
-  if (/^\d+$/.test(v)) {
-    el.value = `C-${v}`;
-  }
-}
-window.autoCraneNoPrefix = autoCraneNoPrefix;
 /* =========================
    전역 바인딩
 ========================= */
@@ -291,8 +255,7 @@ window.deleteCrane = deleteCrane;
 window.setCraneHold = setCraneHold;
 window.releaseCraneHold = releaseCraneHold;
 window.saveInspection = saveInspection;
-window.toggleHoistDetail = toggleHoistDetail;
+window.resetInspectionStatus = resetInspectionStatus;
 window.openCraneList = openCraneList;
 window.openRemarkList = openRemarkList;
 window.openHoldList = openHoldList;
-
