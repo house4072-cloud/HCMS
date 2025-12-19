@@ -63,7 +63,6 @@ let editingCraneId = null;
 async function addCrane(category = "일반") {
   let crane_no = document.getElementById("c_no")?.value?.trim();
   if (!crane_no) return alert("크레인 번호 필수");
-
   if (/^\d+$/.test(crane_no)) crane_no = `C-${crane_no}`;
 
   const hoistType =
@@ -114,7 +113,7 @@ async function addCrane(category = "일반") {
 }
 
 /* =========================
-   수정용 로드 / 삭제 / 보류
+   수정 / 삭제 / 보류
 ========================= */
 async function loadCraneToForm(id) {
   const { data } = await sb.from("cranes").select("*").eq("id", id).single();
@@ -156,31 +155,11 @@ async function releaseCraneHold(id) {
 }
 
 /* =========================
-   🔥 메인(index.html) 전용 기능 추가
+   🔥 메인 점검 저장 (400 에러 해결)
 ========================= */
-async function loadDashboard() {
-  const { data } = await sb.from("cranes").select("inspection_status");
-  if (!data) return;
-
-  let total = data.length, done = 0, hold = 0, fail = 0, none = 0;
-  data.forEach(c => {
-    if (c.inspection_status === "완료") done++;
-    else if (c.inspection_status === "보류") hold++;
-    else if (c.inspection_status === "미완") fail++;
-    else none++;
-  });
-
-  document.getElementById("d_total") && (d_total.innerText = total);
-  document.getElementById("d_done") && (d_done.innerText = done);
-  document.getElementById("d_hold") && (d_hold.innerText = hold);
-  document.getElementById("d_fail") && (d_fail.innerText = fail);
-  document.getElementById("d_none") && (d_none.innerText = none);
-}
-
 async function saveInspection() {
   let crane_no = document.getElementById("i_crane_no")?.value?.trim();
   if (!crane_no) return alert("크레인 번호 입력");
-
   if (/^\d+$/.test(crane_no)) crane_no = `C-${crane_no}`;
 
   const result = document.getElementById("i_result")?.value || "완료";
@@ -194,30 +173,57 @@ async function saveInspection() {
   }
 
   const craneUpdate = {
-  inspection_status: result,
-  next_inspection_date: next_due
-};
+    inspection_status: result,
+    next_inspection_date: next_due
+  };
 
-// 🔥 보류일 때만 사유 같이 저장
-if (result === "보류") {
-  craneUpdate.hold_reason = comment || "메인 입력 보류";
-}
+  if (result === "보류") {
+    craneUpdate.hold_reason = comment || "메인 입력 보류";
+  }
 
-await sb.from("cranes")
-  .update(craneUpdate)
-  .eq("crane_no", crane_no);
+  await sb.from("cranes").update(craneUpdate).eq("crane_no", crane_no);
 
-
-  await sb.from("inspections").insert({
+  const inspectionPayload = {
     crane_no,
     inspection_date: new Date().toISOString().slice(0, 10),
     result,
-    comment,
-    next_due
-  });
+    comment
+  };
+
+  if (result === "완료") {
+    inspectionPayload.next_due = next_due;
+  }
+
+  const ins = await sb.from("inspections").insert(inspectionPayload);
+  if (ins.error) {
+    console.error(ins.error);
+    return alert(ins.error.message);
+  }
 
   alert("점검 저장 완료");
   loadDashboard();
+}
+
+/* =========================
+   대시보드 / 리셋
+========================= */
+async function loadDashboard() {
+  const { data } = await sb.from("cranes").select("inspection_status");
+  if (!data) return;
+
+  let total = data.length, done = 0, hold = 0, fail = 0, none = 0;
+  data.forEach(c => {
+    if (c.inspection_status === "완료") done++;
+    else if (c.inspection_status === "보류") hold++;
+    else if (c.inspection_status === "미완") fail++;
+    else none++;
+  });
+
+  d_total && (d_total.innerText = total);
+  d_done && (d_done.innerText = done);
+  d_hold && (d_hold.innerText = hold);
+  d_fail && (d_fail.innerText = fail);
+  d_none && (d_none.innerText = none);
 }
 
 async function resetInspectionStatus() {
@@ -231,9 +237,9 @@ async function resetInspectionStatus() {
 ========================= */
 function toggleHoistDetail() {
   const type = document.getElementById("c_hoist_type")?.value;
-  document.getElementById("c_wire_dia") && (c_wire_dia.style.display = type === "Wire" ? "block" : "none");
-  document.getElementById("c_wire_len") && (c_wire_len.style.display = type === "Wire" ? "block" : "none");
-  document.getElementById("c_reeving") && (c_reeving.style.display = type ? "block" : "none");
+  c_wire_dia && (c_wire_dia.style.display = type === "Wire" ? "block" : "none");
+  c_wire_len && (c_wire_len.style.display = type === "Wire" ? "block" : "none");
+  c_reeving && (c_reeving.style.display = type ? "block" : "none");
 }
 
 function clearCraneForm() {
