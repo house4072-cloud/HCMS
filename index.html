@@ -4,11 +4,132 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HCMS</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0e0e11;
+      color: #fff;
+    }
+
+    .topbar {
+      background: #ff8a00;
+      padding: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      text-align: center;
+      color: #000;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 24px;
+    }
+
+    .card {
+      background: #1a1a22;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 26px;
+    }
+
+    /* ===== 대시보드 ===== */
+    .dash {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 20px;
+    }
+
+    .dash-item {
+      background: #111;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      font-size: 20px;
+    }
+
+    .dash-item span {
+      display: block;
+      margin-top: 10px;
+      font-size: 40px;
+      font-weight: bold;
+      color: #ff8a00;
+    }
+
+    /* ===== 입력 폼 ===== */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 18px 16px;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    label {
+      font-size: 20px;
+    }
+
+    .input {
+      height: 56px;
+      font-size: 20px;
+      padding: 0 14px;
+      border-radius: 8px;
+      border: none;
+    }
+
+    /* ===== 버튼 ===== */
+    .btn-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      height: 64px;
+      padding: 0 32px;
+      font-size: 22px;
+      font-weight: bold;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      background: #ff8a00;
+      color: #000;
+    }
+
+    .btn.warn {
+      background: #ff4444;
+      color: #fff;
+    }
+
+    /* ===== 반응형 ===== */
+    @media (max-width: 900px) {
+      .dash {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      label {
+        margin-top: 10px;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
 <header class="topbar">
-  <div class="title">HCMS</div>
+  HCMS
 </header>
 
 <main class="container">
@@ -65,7 +186,10 @@
 
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- App -->
 <script src="app.js"></script>
+
 </body>
 </html>
