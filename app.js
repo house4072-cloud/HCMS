@@ -141,7 +141,8 @@ async function setCraneHold(id) {
   if (!reason) return;
   await sb.from("cranes").update({
     inspection_status: "보류",
-    hold_reason: reason
+    hold_reason: reason,
+    next_inspection_date: null
   }).eq("id", id);
   loadCranes();
 }
@@ -149,13 +150,14 @@ async function setCraneHold(id) {
 async function releaseCraneHold(id) {
   await sb.from("cranes").update({
     inspection_status: "미완료",
-    hold_reason: null
+    hold_reason: null,
+    next_inspection_date: null
   }).eq("id", id);
   loadCranes();
 }
 
 /* =========================
-   🔥 메인 점검 저장 (id 기준 / 최종 안정본)
+   🔥 메인 점검 저장 (v2 날짜 오류 수정)
 ========================= */
 async function saveInspection() {
   let crane_no = document.getElementById("i_crane_no")?.value?.trim();
@@ -165,14 +167,16 @@ async function saveInspection() {
   const result = document.getElementById("i_result")?.value || "완료";
   const comment = document.getElementById("i_comment")?.value || null;
 
-  let next_due = document.getElementById("i_next")?.value;
+  // 🔧 핵심 수정: "" → null
+  let next_due_raw = document.getElementById("i_next")?.value;
+  let next_due = next_due_raw && next_due_raw !== "" ? next_due_raw : null;
+
   if (!next_due && result === "완료") {
     const d = new Date();
     d.setMonth(d.getMonth() + 3);
     next_due = d.toISOString().slice(0, 10);
   }
 
-  // 1️⃣ crane_no → id 조회
   const { data: craneRow, error: findErr } = await sb
     .from("cranes")
     .select("id")
@@ -183,7 +187,6 @@ async function saveInspection() {
     return alert(`크레인 번호 없음: ${crane_no}`);
   }
 
-  // 2️⃣ cranes 업데이트 (id 기준)
   const craneUpdate = {
     inspection_status: result,
     next_inspection_date: next_due
@@ -200,7 +203,6 @@ async function saveInspection() {
 
   if (up.error) return alert(up.error.message);
 
-  // 3️⃣ inspections 로그 (조건부)
   const inspectionPayload = {
     crane_no,
     inspection_date: new Date().toISOString().slice(0, 10),
