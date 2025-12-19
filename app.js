@@ -193,10 +193,20 @@ async function saveInspection() {
     next_due = d.toISOString().slice(0, 10);
   }
 
-  await sb.from("cranes").update({
-    inspection_status: result,
-    next_inspection_date: next_due
-  }).eq("crane_no", crane_no);
+  const craneUpdate = {
+  inspection_status: result,
+  next_inspection_date: next_due
+};
+
+// 🔥 보류일 때만 사유 같이 저장
+if (result === "보류") {
+  craneUpdate.hold_reason = comment || "메인 입력 보류";
+}
+
+await sb.from("cranes")
+  .update(craneUpdate)
+  .eq("crane_no", crane_no);
+
 
   await sb.from("inspections").insert({
     crane_no,
