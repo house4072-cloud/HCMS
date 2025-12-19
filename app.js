@@ -1,6 +1,6 @@
 // ===== Supabase 초기화 =====
 const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1Mz330.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* =========================
@@ -155,7 +155,7 @@ async function releaseCraneHold(id) {
 }
 
 /* =========================
-   🔥 메인 점검 저장 (400 에러 해결)
+   🔥 메인 점검 저장 (id 기준 / 최종 안정본)
 ========================= */
 async function saveInspection() {
   let crane_no = document.getElementById("i_crane_no")?.value?.trim();
@@ -172,6 +172,18 @@ async function saveInspection() {
     next_due = d.toISOString().slice(0, 10);
   }
 
+  // 1️⃣ crane_no → id 조회
+  const { data: craneRow, error: findErr } = await sb
+    .from("cranes")
+    .select("id")
+    .eq("crane_no", crane_no)
+    .single();
+
+  if (findErr || !craneRow) {
+    return alert(`크레인 번호 없음: ${crane_no}`);
+  }
+
+  // 2️⃣ cranes 업데이트 (id 기준)
   const craneUpdate = {
     inspection_status: result,
     next_inspection_date: next_due
@@ -181,8 +193,14 @@ async function saveInspection() {
     craneUpdate.hold_reason = comment || "메인 입력 보류";
   }
 
-  await sb.from("cranes").update(craneUpdate).eq("id", craneRow.id);
+  const up = await sb
+    .from("cranes")
+    .update(craneUpdate)
+    .eq("id", craneRow.id);
 
+  if (up.error) return alert(up.error.message);
+
+  // 3️⃣ inspections 로그 (조건부)
   const inspectionPayload = {
     crane_no,
     inspection_date: new Date().toISOString().slice(0, 10),
@@ -195,17 +213,14 @@ async function saveInspection() {
   }
 
   const ins = await sb.from("inspections").insert(inspectionPayload);
-  if (ins.error) {
-    console.error(ins.error);
-    return alert(ins.error.message);
-  }
+  if (ins.error) return alert(ins.error.message);
 
   alert("점검 저장 완료");
   loadDashboard();
 }
 
 /* =========================
-   대시보드 / 리셋
+   대시보드 / 분기 리셋
 ========================= */
 async function loadDashboard() {
   const { data } = await sb.from("cranes").select("inspection_status");
