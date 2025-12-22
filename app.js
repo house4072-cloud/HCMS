@@ -36,6 +36,19 @@ function addMonthsISO(months) {
 }
 
 /* =========================
+   v4 ADD: 날짜 키보드 입력 보정
+   - YYYYMMDD 입력 시 YYYY-MM-DD로 자동 변환
+========================= */
+function normalizeDateValue(v) {
+  if (!v) return "";
+  const s = String(v).trim();
+  if (/^\d{8}$/.test(s)) {
+    return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
+  }
+  return s;
+}
+
+/* =========================
    크레인 리스트 로드
    v3 FIX:
    - 번호구분(f_no_mode) 필터 동작
@@ -237,14 +250,34 @@ async function releaseCraneHold(id) {
 /* =========================
    메인 점검 저장 (id 기준 / 안정본)
    ✅ date "" 오류 방지
+   ✅ v4: TC- 입력은 그대로(타워는 TC-로 입력)
+   ✅ v4: 코멘트 비었으면 자동 멘트
+   ✅ v4: i_next 8자리 입력 보정
 ========================= */
 async function saveInspection() {
   let crane_no = document.getElementById("i_crane_no")?.value?.trim();
   if (!crane_no) return alert("크레인 번호 입력");
-  if (/^\d+$/.test(crane_no)) crane_no = `C-${crane_no}`;
+
+  // ✅ 타워는 사용자가 TC- 붙여서 입력할 예정 (충돌 방지)
+  // ✅ 소형은 숫자만 입력하면 C- 자동
+  if (!/^TC-/i.test(crane_no) && /^\d+$/.test(crane_no)) {
+    crane_no = `C-${crane_no}`;
+  }
 
   const result = document.getElementById("i_result")?.value || "완료";
-  const comment = document.getElementById("i_comment")?.value || null;
+
+  // ✅ 날짜 키보드 입력 보정
+  const dateEl = document.getElementById("i_next");
+  if (dateEl) dateEl.value = normalizeDateValue(dateEl.value);
+
+  let comment = document.getElementById("i_comment")?.value?.trim() || null;
+
+  // ✅ 코멘트 자동 멘트(비었을 때만)
+  if (!comment) {
+    comment = /^TC-/i.test(crane_no)
+      ? "타워크레인 점검 (타워는 TC- 붙여서 입력)"
+      : "소형 크레인 점검 (소형은 숫자만 입력 가능)";
+  }
 
   let next_due = document.getElementById("i_next")?.value || null;
 
@@ -368,6 +401,8 @@ function autoCraneNoPrefix() {
 
 /* =========================
    점검 예정 대시보드
+   ✅ v4 FIX: 타워 판별 강화
+   - crane_type === "타워" 또는 crane_no가 TC-로 시작하면 타워로 취급
 ========================= */
 function _ddayLabel(days) {
   if (days >= 0) return `D-${days}`;
@@ -377,6 +412,11 @@ function _daysDiffFromToday(dateStr) {
   const t = new Date(todayISO());
   const d = new Date(dateStr);
   return Math.ceil((d - t) / (1000 * 60 * 60 * 24));
+}
+function _isTowerCrane(c) {
+  const no = (c?.crane_no || "").toUpperCase();
+  const type = (c?.crane_type || "").toLowerCase();
+  return no.startsWith("TC-") || type === "타워" || type === "tower";
 }
 
 async function loadScheduleDashboard() {
@@ -399,8 +439,11 @@ async function loadScheduleDashboard() {
     .filter(c => c.inspection_status !== "완료")
     .sort((a, b) => a.dday - b.dday);
 
-  const small = list.filter(c => c.crane_type !== "타워").slice(0, 10);
-  const tower = list.filter(c => c.crane_type === "타워").slice(0, 5);
+  // ✅ 소형/서비스 = 타워 제외 10개
+  const small = list.filter(c => !_isTowerCrane(c)).slice(0, 10);
+
+  // ✅ 타워 = 타워로 판별되는 것 5개
+  const tower = list.filter(c => _isTowerCrane(c)).slice(0, 5);
 
   const cardHTML = (c) => `
     <div class="schedule-card">
@@ -458,6 +501,24 @@ function openTowerCraneList() { window.open("tower_cranes.html", "_blank"); }
    자동 실행
 ========================= */
 document.addEventListener("DOMContentLoaded", () => {
+  // ✅ v4: 날짜 키보드 입력 보정 이벤트(i_next)
+  const iNext = document.getElementById("i_next");
+  if (iNext) {
+    iNext.addEventListener("input", () => {
+      const nv = normalizeDateValue(iNext.value);
+      // type=date 환경에서는 중간 입력 간섭될 수 있어, 8자리 완성 시에만 적용
+      if (/^\d{8}$/.test(String(iNext.value).trim())) {
+        iNext.value = nv;
+      }
+    });
+    iNext.addEventListener("blur", () => {
+      iNext.value = normalizeDateValue(iNext.value);
+    });
+    iNext.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") iNext.value = normalizeDateValue(iNext.value);
+    });
+  }
+
   if (document.getElementById("f_no_mode")) applyNoModeFilterUI();
   if (document.getElementById("craneList")) loadCranes();
 
