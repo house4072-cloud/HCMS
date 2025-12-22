@@ -413,3 +413,118 @@ window.openRemarkList = openRemarkList;
 window.openHoldList = openHoldList;
 
 window.autoCraneNoPrefix = autoCraneNoPrefix;
+/* =====================================================
+   🔥 점검 예정 대시보드 (신규 추가 v4)
+   기존 코드 절대 수정 없음
+===================================================== */
+
+/* 날짜 차이 계산 */
+function calcDDay(targetDate) {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const target = new Date(targetDate);
+  target.setHours(0,0,0,0);
+
+  const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+  return diff;
+}
+
+/* 카드 HTML 생성 */
+function createScheduleCard(c) {
+  const d = calcDDay(c.next_inspection_date);
+  const dText = d >= 0 ? `D-${d}` : `D+${Math.abs(d)}`;
+
+  return `
+    <div class="schedule-card">
+      <div class="sc-title">${c.crane_no || '번호없음'}</div>
+      <div class="sc-sub">
+        ${c.crane_type || ''} · ${c.area || ''}
+      </div>
+      <div class="sc-dday ${d < 0 ? 'over' : ''}">${dText}</div>
+      <div class="sc-btns">
+        <button onclick="scheduleDone('${c.id}')">완료</button>
+        <button class="warn" onclick="scheduleHold('${c.id}')">보류</button>
+      </div>
+    </div>
+  `;
+}
+
+/* 점검 예정 로드 */
+async function loadScheduleDashboard() {
+  const { data, error } = await sb
+    .from("cranes")
+    .select("id, crane_no, crane_type, area, next_inspection_date, inspection_status")
+    .neq("inspection_status", "완료")
+    .not("next_inspection_date", "is", null);
+
+  if (error || !data) return;
+
+  // 날짜순 정렬
+  data.sort((a, b) =>
+    new Date(a.next_inspection_date) - new Date(b.next_inspection_date)
+  );
+
+  const smallBox = document.getElementById("schedule-small");
+  const towerBox = document.getElementById("schedule-tower");
+  if (!smallBox || !towerBox) return;
+
+  smallBox.innerHTML = "";
+  towerBox.innerHTML = "";
+
+  let smallCount = 0;
+  let towerCount = 0;
+
+  data.forEach(c => {
+    if (c.crane_type === "Tower") {
+      if (towerCount < 5) {
+        towerBox.insertAdjacentHTML("beforeend", createScheduleCard(c));
+        towerCount++;
+      }
+    } else {
+      if (smallCount < 10) {
+        smallBox.insertAdjacentHTML("beforeend", createScheduleCard(c));
+        smallCount++;
+      }
+    }
+  });
+}
+
+/* 예정 → 완료 */
+async function scheduleDone(id) {
+  const today = new Date();
+  const next = new Date();
+  next.setMonth(next.getMonth() + 3);
+
+  await sb.from("cranes").update({
+    inspection_status: "완료",
+    next_inspection_date: next.toISOString().slice(0,10)
+  }).eq("id", id);
+
+  loadDashboard();
+  loadScheduleDashboard();
+}
+
+/* 예정 → 보류 */
+async function scheduleHold(id) {
+  const reason = prompt("보류 사유 입력");
+  if (!reason) return;
+
+  await sb.from("cranes").update({
+    inspection_status: "보류",
+    hold_reason: reason
+  }).eq("id", id);
+
+  loadDashboard();
+  loadScheduleDashboard();
+}
+
+/* 자동 실행 추가 */
+document.addEventListener("DOMContentLoaded", () => {
+  loadScheduleDashboard();
+});
+
+/* 전역 바인딩 */
+window.loadScheduleDashboard = loadScheduleDashboard;
+window.scheduleDone = scheduleDone;
+window.scheduleHold = scheduleHold;
