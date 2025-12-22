@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <link rel="stylesheet" href="assets/hcms.css">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HCMS | 크레인 리스트</title>
+
+  <link rel="stylesheet" href="assets/hcms.css">
 
   <style>
     body {
@@ -21,8 +22,6 @@
       gap: 10px;
       margin-bottom: 16px;
     }
-
-    .add-box { grid-template-columns: repeat(6, 1fr); }
 
     input, select, button {
       height: 56px;
@@ -85,6 +84,7 @@
 
   <!-- 필터 -->
   <div class="filter-box">
+    <!-- ✅ 번호구분 필터(오류 원인: 함수 없었음 → 하단에 추가함) -->
     <select id="f_no_mode" onchange="applyNoModeFilterUI()">
       <option value="">번호구분 전체</option>
       <option value="input">번호입력</option>
@@ -93,7 +93,7 @@
 
     <input id="f_no" placeholder="크레인 번호 (예: C-014)" />
 
-    <!-- ✅ A/B 선택 복구 -->
+    <!-- ✅ A/B 선택 -->
     <select id="f_area">
       <option value="">지역 전체</option>
       <option value="A">A</option>
@@ -147,7 +147,7 @@
     <!-- 번호 -->
     <input id="c_no" placeholder="크레인 번호 (숫자만 입력 가능)" onblur="autoCraneNoPrefix()" />
 
-    <!-- ✅ A/B 선택 복구 -->
+    <!-- ✅ A/B 선택 -->
     <select id="c_area">
       <option value="">지역 선택</option>
       <option value="A">A</option>
@@ -206,10 +206,7 @@
         <th>타입</th>
         <th>브랜드</th>
         <th>톤수</th>
-
-        <!-- ✅ 톤수 다음에 호이스트 칸 고정 -->
         <th>호이스트</th>
-
         <th>그룹</th>
         <th>상태</th>
         <th>관리</th>
@@ -222,12 +219,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
 
-  <!-- cranes.html 전용 보조 스크립트 (app.js 건드리지 않음) -->
+  <!-- cranes.html 전용 보조 스크립트 (app.js는 수정하지 않음) -->
   <script>
+    // ✅ 등록: 번호입력/번호없음 UI 제어
     function setNoMode() {
       const mode = document.getElementById("c_no_mode")?.value;
       const no = document.getElementById("c_no");
-
       if (!no) return;
 
       if (mode === "none") {
@@ -241,9 +238,34 @@
       }
     }
 
+    // ✅ 필터: 번호구분 UI 제어 (기존 오류 원인 함수 누락 → 여기서 해결)
+    function applyNoModeFilterUI() {
+      const mode = document.getElementById("f_no_mode")?.value;
+      const fno = document.getElementById("f_no");
+      if (!fno) return;
+
+      if (mode === "none") {
+        // 번호없음: 입력칸 비활성 + 값 고정
+        fno.value = "번호없음";
+        fno.readOnly = true;
+        fno.style.background = "#f4f4f4";
+      } else if (mode === "input") {
+        // 번호입력: 입력칸 활성
+        if (fno.value === "번호없음") fno.value = "";
+        fno.readOnly = false;
+        fno.style.background = "";
+      } else {
+        // 전체: 입력칸 활성
+        if (fno.value === "번호없음") fno.value = "";
+        fno.readOnly = false;
+        fno.style.background = "";
+      }
+    }
+
     // 페이지 진입 시 기본 모드 적용
     document.addEventListener("DOMContentLoaded", () => {
       setNoMode();
+      applyNoModeFilterUI();
     });
   </script>
 </body>
