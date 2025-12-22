@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>HCMS | 크레인 리스트</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js" type="module"></script>
+  <script src="app.js"></script>
 
   <style>
     body {
@@ -17,7 +17,7 @@
 
     .filter-box, .add-box {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(7, 1fr);
       gap: 10px;
       margin-bottom: 20px;
     }
@@ -44,31 +44,46 @@
       text-align: center;
     }
 
-    tr {
-      height: 48px;
-    }
-
-    th {
-      background: #f4f4f4;
-    }
+    tr { height: 48px; }
+    th { background: #f4f4f4; }
   </style>
 </head>
 <body>
 
 <h1>크레인 리스트</h1>
 
-<!-- 필터 -->
+<!-- ✅ 필터 -->
 <div class="filter-box">
-  <input id="f_no" placeholder="크레인 번호" />
+  <select id="f_no_mode">
+    <option value="">번호 전체</option>
+    <option value="HAS">번호 있음</option>
+    <option value="NONE">번호 없음</option>
+  </select>
+
+  <input id="f_no" placeholder="크레인 번호(검색)" />
   <input id="f_area" placeholder="지역" />
-  <input id="f_type" placeholder="타입" />
+
+  <!-- ✅ 타입: 선택형 -->
+  <select id="f_type">
+    <option value="">타입 전체</option>
+    <option value="EOT">EOT</option>
+    <option value="Suspension">Suspension</option>
+    <option value="Gantry">Gantry</option>
+    <option value="Post">Post</option>
+    <option value="Wall">Wall</option>
+    <option value="Monorail">Monorail</option>
+    <option value="Service">Service</option>
+  </select>
+
   <input id="f_brand" placeholder="브랜드" />
   <input id="f_ton" placeholder="톤수" />
+
   <select id="f_status">
     <option value="">상태 전체</option>
     <option value="완료">완료</option>
-    <option value="미완료">미완료</option>
+    <option value="미완">미완</option>
     <option value="보류">보류</option>
+    <option value="미점검">미점검</option>
   </select>
 </div>
 
@@ -76,60 +91,62 @@
 
 <hr />
 
-<!-- 크레인 등록 -->
+<!-- ✅ 크레인 등록 -->
 <h3>크레인 등록</h3>
+
 <div class="add-box">
+  <!-- ✅ 번호모드 -->
+  <select id="c_no_mode" onchange="toggleCraneNoMode()">
+    <option value="INPUT">번호 입력</option>
+    <option value="NONE">번호 없음</option>
+  </select>
 
- <input id="c_no" placeholder="크레인 번호 (숫자)" onblur="autoCraneNoPrefix()" />
+  <!-- 번호 입력 -->
+  <input id="c_no" placeholder="숫자만 입력 가능 (예: 203)" onblur="autoCraneNoPrefix()" />
 
-  <select id="c_area">
-  <option value="">지역</option>
-  <option value="A">A</option>
-  <option value="B">B</option>
-</select>
+  <!-- 지역(원하면 나중에 A/B만으로 고정 가능) -->
+  <input id="c_area" placeholder="지역" />
 
-
-  <!-- 크레인 타입 (영문 고정) -->
+  <!-- ✅ 타입 선택 -->
   <select id="c_type">
-    <option value="">크레인 타입</option>
+    <option value="">타입 선택</option>
     <option value="EOT">EOT</option>
     <option value="Suspension">Suspension</option>
     <option value="Gantry">Gantry</option>
     <option value="Post">Post</option>
     <option value="Wall">Wall</option>
     <option value="Monorail">Monorail</option>
+    <option value="Service">Service</option>
   </select>
 
-  <!-- 호이스트 종류 -->
+  <!-- 호이스트 -->
   <select id="c_hoist_type" onchange="toggleHoistDetail()">
     <option value="">호이스트 타입</option>
     <option value="Wire">Wire</option>
     <option value="Chain">Chain</option>
   </select>
 
-  <!-- Wire 전용 -->
-  <input id="c_wire_dia" placeholder="와이어 파이 (숫자)" style="display:none;" />
-  <input id="c_wire_len" placeholder="와이어 길이 M (숫자)" style="display:none;" />
-
-  <!-- 공통 (싱글/더블) -->
-  <select id="c_reeving" style="display:none;">
-    <option value="">권상 방식</option>
-    <option value="Single">Single</option>
-    <option value="Double">Double</option>
-  </select>
-
   <input id="c_brand" placeholder="브랜드" />
   <input id="c_ton" placeholder="톤수" />
   <input id="c_group" placeholder="그룹" />
 
+  <!-- Wire일 때만 사용 -->
+  <input id="c_wire_dia" placeholder="와이어 Φ (숫자만)" style="display:none;" />
+  <input id="c_wire_len" placeholder="와이어 길이 M (숫자만)" style="display:none;" />
+
+  <!-- Wire/Chain 공통 -->
+  <select id="c_reeving" style="display:none;">
+    <option value="">싱글/더블</option>
+    <option value="Single">Single</option>
+    <option value="Double">Double</option>
+  </select>
 </div>
 
 <button onclick="addCrane()">크레인 등록</button>
 
-
 <hr />
 
-<!-- 리스트 -->
+<!-- ✅ 리스트 -->
 <table>
   <thead>
     <tr>
@@ -138,10 +155,10 @@
       <th>타입</th>
       <th>브랜드</th>
       <th>톤수</th>
-      <th>호이스트정보</th>
+      <th>호이스트</th>
       <th>그룹</th>
       <th>상태</th>
-      <th>보류</th>
+      <th>관리</th>
     </tr>
   </thead>
   <tbody id="craneList"></tbody>
@@ -149,5 +166,3 @@
 
 </body>
 </html>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js" type="module"></script>
