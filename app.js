@@ -313,8 +313,10 @@ async function loadDashboard() {
 
 async function resetInspectionStatus() {
   if (!confirm("분기 리셋 하시겠습니까?")) return;
-  await sb.from("cranes").update({ inspection_status: "미점검" });
-  loadDashboard();
+  await sb
+  .from("cranes")
+  .update({ inspection_status: "미점검" })
+  .neq("id", "00000000-0000-0000-0000-000000000000");
 }
 
 /* =========================
