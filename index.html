@@ -134,13 +134,28 @@
         grid-template-columns: 1fr;
       }
 
+      /* 🔥 모바일 TOPBAR 보정 */
       .topbar {
         grid-template-columns: 1fr;
-        gap: 10px;
+        text-align: center;
+        padding: 16px;
+        row-gap: 12px;
+      }
+
+      .topbar img {
+        height: 36px;
+        justify-self: center;
       }
 
       .topbar .title {
         order: -1;
+        margin-bottom: 8px;
+        font-size: 28px;
+      }
+
+      /* 로고 두 개 가로 정렬 */
+      .topbar img:first-child {
+        margin-right: 16px;
       }
     }
   </style>
@@ -150,13 +165,13 @@
 
 <header class="topbar">
   <!-- 좌측 로고 -->
-  <img src="assets/hope.png" alt="희망이엔지">
+  <img src="assets/logo_hope.png" alt="희망이엔지">
 
   <!-- 중앙 타이틀 -->
   <div class="title">HCMS</div>
 
   <!-- 우측 로고 -->
-  <img src="assets/hanwha.png" alt="한화에너지">
+  <img src="assets/logo_hanwha.png" alt="한화에너지">
 </header>
 
 <main class="container">
@@ -213,7 +228,9 @@
 
 </main>
 
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- App -->
 <script src="app.js"></script>
 
 </body>
