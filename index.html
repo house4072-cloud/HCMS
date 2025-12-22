@@ -25,15 +25,24 @@
       align-items: center;
     }
 
-    .topbar img {
-      height: 48px;
-    }
-
-    .topbar .title {
+    .title {
       text-align: center;
       font-size: 32px;
       font-weight: bold;
       color: #000;
+    }
+
+    /* ===== 로고 ===== */
+    .logo-box {
+      display: flex;
+      align-items: center;
+    }
+
+    .logo-box img {
+      height: 48px;
+      width: auto;
+      max-width: 160px;
+      object-fit: contain;
     }
 
     /* ===== MAIN ===== */
@@ -124,38 +133,34 @@
       color: #fff;
     }
 
-    /* ===== 반응형 ===== */
+    /* ===== 모바일 대응 ===== */
     @media (max-width: 900px) {
+      .topbar {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .logo-box {
+        justify-content: center;
+      }
+
+      .logo-box img {
+        height: 36px;
+        max-width: 140px;
+      }
+
+      .title {
+        order: -1;
+        font-size: 28px;
+      }
+
       .dash {
         grid-template-columns: repeat(2, 1fr);
       }
 
       .form-grid {
         grid-template-columns: 1fr;
-      }
-
-      /* 🔥 모바일 TOPBAR 보정 */
-      .topbar {
-        grid-template-columns: 1fr;
-        text-align: center;
-        padding: 16px;
-        row-gap: 12px;
-      }
-
-      .topbar img {
-        height: 36px;
-        justify-self: center;
-      }
-
-      .topbar .title {
-        order: -1;
-        margin-bottom: 8px;
-        font-size: 28px;
-      }
-
-      /* 로고 두 개 가로 정렬 */
-      .topbar img:first-child {
-        margin-right: 16px;
       }
     }
   </style>
@@ -165,13 +170,17 @@
 
 <header class="topbar">
   <!-- 좌측 로고 -->
-  <img src="assets/logo_hope.png" alt="희망이엔지">
+  <div class="logo-box">
+    <img src="assets/logo_hope.png" alt="희망이엔지">
+  </div>
 
   <!-- 중앙 타이틀 -->
   <div class="title">HCMS</div>
 
   <!-- 우측 로고 -->
-  <img src="assets/logo_hanwha.png" alt="한화에너지">
+  <div class="logo-box">
+    <img src="assets/logo_hanwha.png" alt="한화에너지">
+  </div>
 </header>
 
 <main class="container">
