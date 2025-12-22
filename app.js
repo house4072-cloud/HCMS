@@ -3,8 +3,6 @@ const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const NO_NUMBER_LABEL = "번호없음";
-
 /* =========================
    크레인 리스트 로드
 ========================= */
@@ -12,23 +10,15 @@ async function loadCranes() {
   let query = sb.from("cranes").select("*");
 
   const no = document.getElementById("f_no")?.value;
-  const noMode = document.getElementById("f_no_mode")?.value; // (전체/번호있음/번호없음)
   const area = document.getElementById("f_area")?.value;
-  const type = document.getElementById("f_type")?.value;      // ✅ 선택형 대응
+  const type = document.getElementById("f_type")?.value;
   const brand = document.getElementById("f_brand")?.value;
   const ton = document.getElementById("f_ton")?.value;
   const status = document.getElementById("f_status")?.value;
 
-  // ✅ 번호 필터 (번호없음/번호있음)
-  if (noMode === "NONE") query = query.eq("crane_no", NO_NUMBER_LABEL);
-  if (noMode === "HAS") query = query.neq("crane_no", NO_NUMBER_LABEL);
-
   if (no) query = query.ilike("crane_no", `%${no}%`);
   if (area) query = query.ilike("area", `%${area}%`);
-
-  // ✅ 타입 필터: 기존엔 입력이었고 지금은 select일 수 있음 (둘 다 value로 처리됨)
   if (type) query = query.eq("crane_type", type);
-
   if (brand) query = query.ilike("brand", `%${brand}%`);
   if (ton) query = query.eq("ton", Number(ton));
   if (status) query = query.eq("inspection_status", status);
@@ -42,8 +32,11 @@ async function loadCranes() {
 
   data.forEach(c => {
     const tr = document.createElement("tr");
+
+    // ✅ v3: 완료 버튼 추가(번호없는 크레인도 id로 처리 가능)
+    // ⚠️ HTML 헤더(th)도 “완료/보류/수정/삭제” 들어갈 칸 폭만 맞추면 됨
     tr.innerHTML = `
-      <td>${c.crane_no}</td>
+      <td>${c.crane_no || "번호없음"}</td>
       <td>${c.area || ""}</td>
       <td>${c.crane_type || ""}</td>
       <td>${c.brand || ""}</td>
@@ -52,6 +45,7 @@ async function loadCranes() {
       <td>${c.group_name || ""}</td>
       <td>${c.inspection_status || ""}</td>
       <td>
+        <button onclick="completeCrane('${c.id}')">완료</button>
         ${
           c.inspection_status === "보류"
             ? `<button onclick="releaseCraneHold('${c.id}')">해제</button>`
@@ -70,33 +64,10 @@ async function loadCranes() {
 ========================= */
 let editingCraneId = null;
 
-function normalizeCraneNoFromForm() {
-  const mode = document.getElementById("c_no_mode")?.value; // INPUT / NONE
-  const el = document.getElementById("c_no");
-
-  // 모드가 없으면 기존 동작 유지 (입력값 그대로 + 숫자면 C-)
-  if (!mode) {
-    let v = el?.value?.trim() || "";
-    if (!v) return "";
-    if (/^\d+$/.test(v)) v = `C-${v}`;
-    return v;
-  }
-
-  // 번호없음 선택
-  if (mode === "NONE") {
-    return NO_NUMBER_LABEL;
-  }
-
-  // 번호입력 선택
-  let v = el?.value?.trim() || "";
-  if (!v) return "";
-  if (/^\d+$/.test(v)) v = `C-${v}`;
-  return v;
-}
-
 async function addCrane(category = "일반") {
-  const crane_no = normalizeCraneNoFromForm();
-  if (!crane_no) return alert("크레인 번호 필수 (또는 '번호없음' 선택)");
+  let crane_no = document.getElementById("c_no")?.value?.trim();
+  if (!crane_no) return alert("크레인 번호 필수");
+  if (/^\d+$/.test(crane_no)) crane_no = `C-${crane_no}`;
 
   const hoistType =
     document.getElementById("c_hoist_type")?.value ||
@@ -128,8 +99,8 @@ async function addCrane(category = "일반") {
     brand: document.getElementById("c_brand")?.value || null,
     ton,
     group_name: document.getElementById("c_group")?.value || null,
-    hoist_type: hoistType || null,
-    hoist_spec: hoistSpec || null,
+    hoist_type: hoistType,
+    hoist_spec: hoistSpec,
     crane_category: category
   };
 
@@ -153,25 +124,7 @@ async function loadCraneToForm(id) {
   if (!data) return;
 
   editingCraneId = id;
-
-  // ✅ 번호없음/번호입력 모드 반영 (있을 때만)
-  const modeEl = document.getElementById("c_no_mode");
-  const noEl = document.getElementById("c_no");
-  if (modeEl && noEl) {
-    if (data.crane_no === NO_NUMBER_LABEL) {
-      modeEl.value = "NONE";
-      noEl.value = "";
-      noEl.disabled = true;
-    } else {
-      modeEl.value = "INPUT";
-      noEl.disabled = false;
-      noEl.value = data.crane_no || "";
-    }
-  } else {
-    // 기존 폼이면 기존대로
-    document.getElementById("c_no").value = data.crane_no || "";
-  }
-
+  document.getElementById("c_no").value = data.crane_no || "";
   document.getElementById("c_area").value = data.area || "";
   document.getElementById("c_type").value = data.crane_type || "";
   document.getElementById("c_brand").value = data.brand || "";
@@ -179,64 +132,113 @@ async function loadCraneToForm(id) {
   document.getElementById("c_group").value = data.group_name || "";
   document.getElementById("c_hoist_type").value = data.hoist_type || "";
   toggleHoistDetail();
+
+  // (기준1에서 hoist_spec 파싱을 더 쓰고 싶으면 여기서 확장 가능)
 }
 
 async function deleteCrane(id) {
   if (!confirm("정말 삭제할까요?")) return;
-  await sb.from("cranes").delete().eq("id", id);
+  const del = await sb.from("cranes").delete().eq("id", id);
+  if (del.error) return alert(del.error.message);
   loadCranes();
+  loadDashboard();
 }
 
 async function setCraneHold(id) {
   const reason = prompt("보류 사유");
   if (!reason) return;
 
-  const { error } = await sb.from("cranes").update({
+  // ✅ v3: 보류면 next_inspection_date는 무조건 null ("" 방지)
+  const up = await sb.from("cranes").update({
     inspection_status: "보류",
-    hold_reason: reason
+    hold_reason: reason,
+    next_inspection_date: null
   }).eq("id", id);
 
-  if (error) return alert(error.message);
+  if (up.error) return alert(up.error.message);
   loadCranes();
+  loadDashboard();
 }
 
 async function releaseCraneHold(id) {
-  const { error } = await sb.from("cranes").update({
-    inspection_status: "미완료",
-    hold_reason: null
+  // ✅ v3: 해제 시 미완으로 돌리고 날짜 null
+  const up = await sb.from("cranes").update({
+    inspection_status: "미완",
+    hold_reason: null,
+    next_inspection_date: null
   }).eq("id", id);
 
-  if (error) return alert(error.message);
+  if (up.error) return alert(up.error.message);
   loadCranes();
+  loadDashboard();
 }
 
 /* =========================
-   🔥 메인 점검 저장 (date "" 에러 FIX)
+   ✅ v3: 리스트에서 완료 처리 (번호없는 크레인 포함)
+   - id 기준 업데이트 (가장 안전)
+   - next_inspection_date = +3개월
+   - inspections 로그도 남김
+========================= */
+async function completeCrane(id) {
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+
+  const next = new Date();
+  next.setMonth(next.getMonth() + 3);
+  const next_due = next.toISOString().slice(0, 10);
+
+  // 1) cranes 업데이트
+  const up = await sb.from("cranes").update({
+    inspection_status: "완료",
+    hold_reason: null,
+    next_inspection_date: next_due
+  }).eq("id", id);
+
+  if (up.error) return alert(up.error.message);
+
+  // 2) crane_no 조회해서 로그에 남김 (번호없음도 기록 가능)
+  const { data: row, error: e2 } = await sb.from("cranes").select("crane_no").eq("id", id).single();
+  const crane_no_for_log = (!e2 && row && row.crane_no) ? row.crane_no : "번호없음";
+
+  const ins = await sb.from("inspections").insert({
+    crane_no: crane_no_for_log,
+    inspection_date: todayStr,
+    result: "완료",
+    comment: "리스트 완료",
+    next_due
+  });
+
+  if (ins.error) return alert(ins.error.message);
+
+  loadCranes();
+  loadDashboard();
+}
+
+/* =========================
+   🔥 메인 점검 저장 (id 기준 / v3 날짜오류 방지 포함)
 ========================= */
 async function saveInspection() {
   let crane_no = document.getElementById("i_crane_no")?.value?.trim();
   if (!crane_no) return alert("크레인 번호 입력");
-
   if (/^\d+$/.test(crane_no)) crane_no = `C-${crane_no}`;
-
-  // ⚠️ 번호없음은 중복 가능해서 메인 점검 대상에서 제외(안전)
-  if (crane_no === NO_NUMBER_LABEL) {
-    return alert("번호없음 크레인은 메인 점검 입력에서 제외(식별 불가).");
-  }
 
   const result = document.getElementById("i_result")?.value || "완료";
   const comment = document.getElementById("i_comment")?.value || null;
 
+  // ✅ v3 핵심: date input은 빈 문자열이면 null로 바꿔서 DB에 "" 안 들어가게
   let next_due = document.getElementById("i_next")?.value;
-
-  // ✅ 핵심 FIX: ""(빈문자열) → null 로 정규화 (date 컬럼에 "" 보내면 에러)
   if (next_due === "") next_due = null;
 
-  // 완료인데 다음 점검일 비어있으면 자동 +3개월
+  // 완료인데 next_due 비었으면 자동 +3개월
   if (!next_due && result === "완료") {
     const d = new Date();
     d.setMonth(d.getMonth() + 3);
     next_due = d.toISOString().slice(0, 10);
+  }
+
+  // 완료가 아니면 next_due는 무조건 null (보류/미완/미점검 등)
+  if (result !== "완료") {
+    next_due = null;
   }
 
   // 1) crane_no → id 조회
@@ -253,13 +255,14 @@ async function saveInspection() {
   // 2) cranes 업데이트 (id 기준)
   const craneUpdate = {
     inspection_status: result,
-    // ✅ null이면 컬럼에 null 들어감 ("" X)
     next_inspection_date: next_due
   };
 
+  // 보류면 사유 저장, 그 외면 null
   if (result === "보류") {
     craneUpdate.hold_reason = comment || "메인 입력 보류";
-    // 보류인데 다음점검일 빈칸이면 null 유지 (이미 next_due null 처리됨)
+  } else {
+    craneUpdate.hold_reason = null;
   }
 
   const up = await sb
@@ -269,16 +272,14 @@ async function saveInspection() {
 
   if (up.error) return alert(up.error.message);
 
-  // 3) inspections 로그
+  // 3) inspections 로그 (✅ next_due는 null 허용)
   const inspectionPayload = {
     crane_no,
     inspection_date: new Date().toISOString().slice(0, 10),
     result,
-    comment: comment || null
+    comment,
+    next_due
   };
-
-  // ✅ next_due도 "" 금지. 값 있을 때만 넣기
-  if (next_due) inspectionPayload.next_due = next_due;
 
   const ins = await sb.from("inspections").insert(inspectionPayload);
   if (ins.error) return alert(ins.error.message);
@@ -292,7 +293,8 @@ async function saveInspection() {
 ========================= */
 async function loadDashboard() {
   const { data, error } = await sb.from("cranes").select("inspection_status");
-  if (error) return; // (권한/네트워크 이슈 대비)
+  if (error) return; // alert는 과하게 뜰 수 있어서 조용히
+
   if (!data) return;
 
   let total = data.length, done = 0, hold = 0, fail = 0, none = 0;
@@ -303,7 +305,7 @@ async function loadDashboard() {
     else none++;
   });
 
-  // 안전 바인딩 (index.html에서만 존재)
+  // (기준1 그대로: id가 있으면 반영)
   if (typeof d_total !== "undefined" && d_total) d_total.innerText = total;
   if (typeof d_done !== "undefined" && d_done) d_done.innerText = done;
   if (typeof d_hold !== "undefined" && d_hold) d_hold.innerText = hold;
@@ -313,10 +315,19 @@ async function loadDashboard() {
 
 async function resetInspectionStatus() {
   if (!confirm("분기 리셋 하시겠습니까?")) return;
-  await sb
-  .from("cranes")
-  .update({ inspection_status: "미점검" })
-  .neq("id", "00000000-0000-0000-0000-000000000000");
+
+  // ✅ v3: WHERE 없는 UPDATE가 400 나는 환경 방지 (조건 업데이트)
+  const up = await sb.from("cranes").update({
+    inspection_status: "미점검",
+    next_inspection_date: null,
+    hold_reason: null
+  }).neq("inspection_status", "미점검");
+
+  if (up.error) return alert(up.error.message);
+
+  alert("분기 리셋 완료");
+  loadDashboard();
+  loadCranes();
 }
 
 /* =========================
@@ -324,13 +335,13 @@ async function resetInspectionStatus() {
 ========================= */
 function toggleHoistDetail() {
   const type = document.getElementById("c_hoist_type")?.value;
-  const diaEl = document.getElementById("c_wire_dia");
-  const lenEl = document.getElementById("c_wire_len");
-  const reevingEl = document.getElementById("c_reeving");
+  const c_wire_dia = document.getElementById("c_wire_dia");
+  const c_wire_len = document.getElementById("c_wire_len");
+  const c_reeving = document.getElementById("c_reeving");
 
-  if (diaEl) diaEl.style.display = type === "Wire" ? "block" : "none";
-  if (lenEl) lenEl.style.display = type === "Wire" ? "block" : "none";
-  if (reevingEl) reevingEl.style.display = type ? "block" : "none";
+  if (c_wire_dia) c_wire_dia.style.display = type === "Wire" ? "block" : "none";
+  if (c_wire_len) c_wire_len.style.display = type === "Wire" ? "block" : "none";
+  if (c_reeving) c_reeving.style.display = type ? "block" : "none";
 }
 
 function clearCraneForm() {
@@ -339,36 +350,12 @@ function clearCraneForm() {
       const el = document.getElementById(id);
       if (el) el.value = "";
     });
-
-  const modeEl = document.getElementById("c_no_mode");
-  const noEl = document.getElementById("c_no");
-  if (modeEl && noEl) {
-    modeEl.value = "INPUT";
-    noEl.disabled = false;
-  }
-}
-
-// ✅ 번호 입력/번호없음 토글 (HTML에 있을 때만 동작)
-function toggleCraneNoMode() {
-  const modeEl = document.getElementById("c_no_mode");
-  const noEl = document.getElementById("c_no");
-  if (!modeEl || !noEl) return;
-
-  if (modeEl.value === "NONE") {
-    noEl.value = "";
-    noEl.disabled = true;
-  } else {
-    noEl.disabled = false;
-  }
 }
 
 /* =========================
    크레인 번호 자동 C- 접두 (입력 종료 시)
 ========================= */
 function autoCraneNoPrefix() {
-  const modeEl = document.getElementById("c_no_mode");
-  if (modeEl && modeEl.value === "NONE") return;
-
   const el = document.getElementById("c_no");
   if (!el) return;
 
@@ -376,7 +363,10 @@ function autoCraneNoPrefix() {
   if (!v) return;
 
   if (v.toUpperCase().startsWith("C-")) return;
-  if (/^\d+$/.test(v)) el.value = `C-${v}`;
+
+  if (/^\d+$/.test(v)) {
+    el.value = `C-${v}`;
+  }
 }
 
 /* =========================
@@ -390,18 +380,17 @@ function openHoldList() { window.open("holds.html", "_blank"); }
    자동 실행
 ========================= */
 document.addEventListener("DOMContentLoaded", () => {
-  // index.html(메인)에서만 대시보드
-  if (document.getElementById("dashboard")) loadDashboard();
+  // 메인(index.html) 대시보드
+  loadDashboard();
 
-  // cranes.html(리스트)에서만 로드
-  if (document.getElementById("craneList")) loadCranes();
-
-  // 번호모드 토글 초기 반영
-  toggleCraneNoMode();
+  // cranes.html 리스트
+  if (document.getElementById("craneList")) {
+    loadCranes();
+  }
 });
 
 /* =========================
-   전역 바인딩
+   전역 바인딩 (✅ 빠짐없이)
 ========================= */
 window.loadCranes = loadCranes;
 window.addCrane = addCrane;
@@ -409,12 +398,18 @@ window.loadCraneToForm = loadCraneToForm;
 window.deleteCrane = deleteCrane;
 window.setCraneHold = setCraneHold;
 window.releaseCraneHold = releaseCraneHold;
+
+window.completeCrane = completeCrane; // ✅ v3 추가
+
 window.saveInspection = saveInspection;
 window.resetInspectionStatus = resetInspectionStatus;
+window.loadDashboard = loadDashboard;
+
+window.toggleHoistDetail = toggleHoistDetail;
+window.clearCraneForm = clearCraneForm;
+
 window.openCraneList = openCraneList;
 window.openRemarkList = openRemarkList;
 window.openHoldList = openHoldList;
 
-window.toggleHoistDetail = toggleHoistDetail;
 window.autoCraneNoPrefix = autoCraneNoPrefix;
-window.toggleCraneNoMode = toggleCraneNoMode;
