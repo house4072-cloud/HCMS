@@ -523,6 +523,126 @@ async function scheduleHold(id) {
 document.addEventListener("DOMContentLoaded", () => {
   loadScheduleDashboard();
 });
+/* =========================
+   🔔 점검 예정 대시보드 (v4)
+   - 기존 로직 수정 ❌
+   - 추가만 함 ⭕
+========================= */
+
+async function loadUpcomingInspections() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const { data, error } = await sb
+    .from("cranes")
+    .select("id, crane_no, crane_type, crane_category, next_inspection_date, inspection_status")
+    .not("next_inspection_date", "is", null)
+    .in("inspection_status", ["완료", "보류", "미완"]);
+
+  if (error || !data) return;
+
+  const upcomingContainer = document.getElementById("upcomingList");
+  if (!upcomingContainer) return;
+
+  upcomingContainer.innerHTML = "";
+
+  const items = data
+    .map(c => {
+      const due = new Date(c.next_inspection_date);
+      due.setHours(0, 0, 0, 0);
+
+      const diffDays = Math.floor((due - today) / (1000 * 60 * 60 * 24));
+
+      return {
+        ...c,
+        diffDays
+      };
+    })
+    // 예정 + 초과만
+    .filter(c => c.diffDays <= 14)
+    // 가까운 순
+    .sort((a, b) => a.diffDays - b.diffDays);
+
+  // 구분
+  const small = items.filter(c =>
+    c.crane_type !== "타워" && c.crane_category !== "타워크레인"
+  ).slice(0, 10);
+
+  const tower = items.filter(c =>
+    c.crane_type === "타워" || c.crane_category === "타워크레인"
+  ).slice(0, 5);
+
+  [...small, ...tower].forEach(c => {
+    const dText =
+      c.diffDays > 0 ? `D-${c.diffDays}` :
+      c.diffDays === 0 ? "D-Day" :
+      `D+${Math.abs(c.diffDays)}`;
+
+    const card = document.createElement("div");
+    card.className = "upcoming-card";
+
+    card.innerHTML = `
+      <div class="up-title">
+        ${c.crane_no || "번호없음"}
+        <span class="badge">${c.crane_type || c.crane_category || ""}</span>
+      </div>
+      <div class="up-date">${dText}</div>
+      <div class="up-actions">
+        <button onclick="markUpcomingDone('${c.id}')">완료</button>
+        <button onclick="markUpcomingHold('${c.id}')">보류</button>
+      </div>
+    `;
+
+    upcomingContainer.appendChild(card);
+  });
+}
+
+/* =========================
+   예정 → 완료 처리
+========================= */
+async function markUpcomingDone(id) {
+  const next = new Date();
+  next.setMonth(next.getMonth() + 3);
+  const nextDue = next.toISOString().slice(0, 10);
+
+  await sb.from("cranes").update({
+    inspection_status: "완료",
+    next_inspection_date: nextDue
+  }).eq("id", id);
+
+  loadDashboard();
+  loadUpcomingInspections();
+}
+
+/* =========================
+   예정 → 보류 처리
+========================= */
+async function markUpcomingHold(id) {
+  const reason = prompt("보류 사유 입력");
+  if (!reason) return;
+
+  await sb.from("cranes").update({
+    inspection_status: "보류",
+    hold_reason: reason
+  }).eq("id", id);
+
+  loadDashboard();
+  loadUpcomingInspections();
+}
+
+/* =========================
+   자동 실행 추가
+========================= */
+document.addEventListener("DOMContentLoaded", () => {
+  loadUpcomingInspections();
+});
+
+/* =========================
+   전역 바인딩 (추가)
+========================= */
+window.loadUpcomingInspections = loadUpcomingInspections;
+window.markUpcomingDone = markUpcomingDone;
+window.markUpcomingHold = markUpcomingHold;
 
 /* 전역 바인딩 */
 window.loadScheduleDashboard = loadScheduleDashboard;
