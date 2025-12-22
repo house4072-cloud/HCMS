@@ -4,16 +4,6 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* =========================
-   유틸: 빈 날짜("") -> null
-   (🔥 invalid input syntax for type date: "" 방지)
-========================= */
-function normalizeDate(v) {
-  if (v === undefined || v === null) return null;
-  const s = String(v).trim();
-  return s === "" ? null : s;
-}
-
-/* =========================
    크레인 리스트 로드
 ========================= */
 async function loadCranes() {
@@ -166,7 +156,7 @@ async function releaseCraneHold(id) {
 
 /* =========================
    🔥 메인 점검 저장 (id 기준 / 안정본)
-   ✅ v2 수정: next_due "" -> null 처리
+   ✅ date "" 오류 방지: 빈값이면 null 넣음
 ========================= */
 async function saveInspection() {
   let crane_no = document.getElementById("i_crane_no")?.value?.trim();
@@ -176,16 +166,16 @@ async function saveInspection() {
   const result = document.getElementById("i_result")?.value || "완료";
   const comment = document.getElementById("i_comment")?.value || null;
 
-  let next_due = normalizeDate(document.getElementById("i_next")?.value);
+  let next_due = document.getElementById("i_next")?.value || null;
 
-  // 완료인데 next_due 비어있으면 3개월 자동
+  // 완료인데 날짜 비었으면 +3개월 자동
   if (!next_due && result === "완료") {
     const d = new Date();
     d.setMonth(d.getMonth() + 3);
     next_due = d.toISOString().slice(0, 10);
   }
 
-  // 1) crane_no -> id 조회
+  // 1) crane_no → id 조회
   const { data: craneRow, error: findErr } = await sb
     .from("cranes")
     .select("id")
@@ -199,11 +189,14 @@ async function saveInspection() {
   // 2) cranes 업데이트 (id 기준)
   const craneUpdate = {
     inspection_status: result,
-    next_inspection_date: normalizeDate(next_due)
+    next_inspection_date: next_due || null
   };
 
   if (result === "보류") {
     craneUpdate.hold_reason = comment || "메인 입력 보류";
+  } else if (result !== "보류") {
+    // 보류가 아닌 상태로 저장 시 hold_reason 정리(원하면 유지로 바꿀 수 있음)
+    // craneUpdate.hold_reason = null;
   }
 
   const up = await sb
@@ -213,33 +206,30 @@ async function saveInspection() {
 
   if (up.error) return alert(up.error.message);
 
-  // 3) inspections 로그 (✅ v2 수정: next_due "" 넣지 않음)
+  // 3) inspections 로그 (✅ 빈 문자열 date 금지: null)
   const inspectionPayload = {
     crane_no,
     inspection_date: new Date().toISOString().slice(0, 10),
     result,
-    comment
+    comment,
+    next_due: next_due || null
   };
-
-  // 완료일 때만 next_due 기록
-  if (result === "완료") {
-    inspectionPayload.next_due = normalizeDate(next_due);
-  }
 
   const ins = await sb.from("inspections").insert(inspectionPayload);
   if (ins.error) return alert(ins.error.message);
 
   alert("점검 저장 완료");
   loadDashboard();
-  loadScheduleDashboard(); // ✅ 추가
+  loadScheduleDashboard(); // ✅ v2 추가
 }
 
 /* =========================
    대시보드 / 분기 리셋
+   ✅ 400 방지: 전체 업데이트는 eq 조건 필요(빈 eq 로 전체 허용 안되는 경우 대비)
 ========================= */
 async function loadDashboard() {
-  const { data, error } = await sb.from("cranes").select("inspection_status");
-  if (error || !data) return;
+  const { data } = await sb.from("cranes").select("inspection_status");
+  if (!data) return;
 
   let total = data.length, done = 0, hold = 0, fail = 0, none = 0;
   data.forEach(c => {
@@ -249,114 +239,27 @@ async function loadDashboard() {
     else none++;
   });
 
-  document.getElementById("d_total") && (d_total.innerText = total);
-  document.getElementById("d_done") && (d_done.innerText = done);
-  document.getElementById("d_hold") && (d_hold.innerText = hold);
-  document.getElementById("d_fail") && (d_fail.innerText = fail);
-  document.getElementById("d_none") && (d_none.innerText = none);
+  if (typeof d_total !== "undefined") d_total.innerText = total;
+  if (typeof d_done !== "undefined") d_done.innerText = done;
+  if (typeof d_hold !== "undefined") d_hold.innerText = hold;
+  if (typeof d_fail !== "undefined") d_fail.innerText = fail;
+  if (typeof d_none !== "undefined") d_none.innerText = none;
 }
 
 async function resetInspectionStatus() {
   if (!confirm("분기 리셋 하시겠습니까?")) return;
 
-  // ✅ 기존 유지: 전체 미점검으로 변경
-  const r = await sb.from("cranes").update({ inspection_status: "미점검" });
-  if (r.error) return alert(r.error.message);
-
-  loadDashboard();
-  loadScheduleDashboard(); // ✅ 추가
-}
-
-/* ======================================================
-   ✅ v2 신규: 점검 예정 대시보드 (소형/서비스 10대, 타워 5대)
-   - next_inspection_date 기준, 가까운 순
-   - D- / D+ 표시
-   - 완료/보류 버튼
-====================================================== */
-async function loadScheduleDashboard() {
-  const smallBox = document.getElementById("schedule-small");
-  const towerBox = document.getElementById("schedule-tower");
-  if (!smallBox || !towerBox) return; // index에 섹션 없으면 그냥 종료
-
-  // 초기화
-  smallBox.innerHTML = "";
-  towerBox.innerHTML = "";
-
-  const { data, error } = await sb
+  // ✅ Supabase에서 “전체 업데이트”가 400 나는 경우가 있어서 안전하게 처리:
+  // active=true 조건을 걸어서 전체에 준하는 업데이트로 동작하게 함
+  const { error } = await sb
     .from("cranes")
-    .select("id, crane_no, crane_type, crane_category, inspection_status, next_inspection_date")
-    .not("next_inspection_date", "is", null);
+    .update({ inspection_status: "미점검" })
+    .eq("active", true);
 
-  if (error || !data) return;
-
-  const today = new Date();
-  const list = data
-    .map(c => {
-      const due = new Date(c.next_inspection_date);
-      const diff = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
-      return { ...c, diff };
-    })
-    .sort((a, b) => a.diff - b.diff);
-
-  let smallCount = 0;
-  let towerCount = 0;
-
-  list.forEach(c => {
-    // 완료는 예정에서 제외
-    if (c.inspection_status === "완료") return;
-
-    const isTower = (c.crane_type === "타워");
-    const target = isTower ? towerBox : smallBox;
-
-    if (!isTower && smallCount >= 10) return;
-    if (isTower && towerCount >= 5) return;
-
-    const dTxt = c.diff >= 0 ? `D-${c.diff}` : `D+${Math.abs(c.diff)}`;
-
-    const row = document.createElement("div");
-    row.className = "schedule-item";
-    row.innerHTML = `
-      <div class="schedule-left">
-        <div class="schedule-no">${c.crane_no || "번호없음"}</div>
-        <div class="schedule-d">${dTxt}</div>
-      </div>
-      <div class="schedule-right">
-        <button class="btn-mini" onclick="scheduleSetStatus('${c.id}','미완')">미완</button>
-        <button class="btn-mini warn" onclick="scheduleSetStatus('${c.id}','보류')">보류</button>
-        <button class="btn-mini ok" onclick="scheduleSetStatus('${c.id}','완료')">완료</button>
-      </div>
-    `;
-    target.appendChild(row);
-
-    if (isTower) towerCount++;
-    else smallCount++;
-  });
-
-  // 비어있으면 안내문
-  if (smallBox.children.length === 0) {
-    smallBox.innerHTML = `<div class="schedule-empty">표시할 예정 항목 없음</div>`;
-  }
-  if (towerBox.children.length === 0) {
-    towerBox.innerHTML = `<div class="schedule-empty">표시할 예정 항목 없음</div>`;
-  }
-}
-
-// 예정 대시보드에서 상태 변경(완료/보류/미완)
-async function scheduleSetStatus(id, status) {
-  const payload = { inspection_status: status };
-
-  // 완료 시 다음 점검일 자동 +3개월 (기존 saveInspection과 동일 로직)
-  if (status === "완료") {
-    const d = new Date();
-    d.setMonth(d.getMonth() + 3);
-    payload.next_inspection_date = d.toISOString().slice(0, 10);
-  }
-
-  const r = await sb.from("cranes").update(payload).eq("id", id);
-  if (r.error) return alert(r.error.message);
+  if (error) return alert(error.message);
 
   loadDashboard();
-  loadScheduleDashboard();
+  loadScheduleDashboard(); // ✅ v2 추가
 }
 
 /* =========================
@@ -364,9 +267,13 @@ async function scheduleSetStatus(id, status) {
 ========================= */
 function toggleHoistDetail() {
   const type = document.getElementById("c_hoist_type")?.value;
-  c_wire_dia && (c_wire_dia.style.display = type === "Wire" ? "block" : "none");
-  c_wire_len && (c_wire_len.style.display = type === "Wire" ? "block" : "none");
-  c_reeving && (c_reeving.style.display = type ? "block" : "none");
+  const c_wire_dia = document.getElementById("c_wire_dia");
+  const c_wire_len = document.getElementById("c_wire_len");
+  const c_reeving = document.getElementById("c_reeving");
+
+  if (c_wire_dia) c_wire_dia.style.display = type === "Wire" ? "block" : "none";
+  if (c_wire_len) c_wire_len.style.display = type === "Wire" ? "block" : "none";
+  if (c_reeving) c_reeving.style.display = type ? "block" : "none";
 }
 
 function clearCraneForm() {
@@ -385,7 +292,104 @@ function autoCraneNoPrefix() {
   if (!v) return;
 
   if (v.toUpperCase().startsWith("C-")) return;
-  if (/^\d+$/.test(v)) el.value = `C-${v}`;
+
+  if (/^\d+$/.test(v)) {
+    el.value = `C-${v}`;
+  }
+}
+
+/* =========================
+   ✅ v2 추가: 점검 예정 대시보드
+   - next_inspection_date 기준
+   - 완료는 제외
+   - 소형/서비스(타워 제외) 10개
+   - 타워 5개
+===================================================== */
+function _ddayLabel(days) {
+  if (days >= 0) return `D-${days}`;
+  return `D+${Math.abs(days)}`;
+}
+
+function _daysDiffFromToday(dateStr) {
+  const t = new Date(todayISO());
+  const d = new Date(dateStr);
+  return Math.ceil((d - t) / (1000 * 60 * 60 * 24));
+}
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function loadScheduleDashboard() {
+  const smallBox = document.getElementById("schedule-small");
+  const towerBox = document.getElementById("schedule-tower");
+  if (!smallBox || !towerBox) return; // index에만 존재
+
+  smallBox.innerHTML = "";
+  towerBox.innerHTML = "";
+
+  const { data, error } = await sb
+    .from("cranes")
+    .select("id,crane_no,crane_type,inspection_status,next_inspection_date")
+    .not("next_inspection_date", "is", null);
+
+  if (error || !data) return;
+
+  const list = data
+    .map(c => ({
+      ...c,
+      dday: _daysDiffFromToday(c.next_inspection_date)
+    }))
+    .filter(c => c.inspection_status !== "완료")
+    .sort((a, b) => a.dday - b.dday);
+
+  const small = list.filter(c => c.crane_type !== "타워").slice(0, 10);
+  const tower = list.filter(c => c.crane_type === "타워").slice(0, 5);
+
+  const cardHTML = (c) => `
+    <div class="schedule-card">
+      <div class="sc-title">${c.crane_no}</div>
+      <div class="sc-sub">${c.crane_type || ""} · ${_ddayLabel(c.dday)}</div>
+      <div class="sc-btns">
+        <button onclick="scheduleSetComplete('${c.id}')">완료</button>
+        <button onclick="scheduleSetHold('${c.id}')">보류</button>
+      </div>
+    </div>
+  `;
+
+  small.forEach(c => smallBox.insertAdjacentHTML("beforeend", cardHTML(c)));
+  tower.forEach(c => towerBox.insertAdjacentHTML("beforeend", cardHTML(c)));
+}
+
+async function scheduleSetComplete(id) {
+  const d = new Date();
+  d.setMonth(d.getMonth() + 3);
+  const next_due = d.toISOString().slice(0, 10);
+
+  const { error } = await sb.from("cranes").update({
+    inspection_status: "완료",
+    next_inspection_date: next_due
+  }).eq("id", id);
+
+  if (error) return alert(error.message);
+
+  loadDashboard();
+  loadScheduleDashboard();
+}
+
+async function scheduleSetHold(id) {
+  const reason = prompt("보류 사유");
+  if (!reason) return;
+
+  const { error } = await sb.from("cranes").update({
+    inspection_status: "보류",
+    hold_reason: reason
+  }).eq("id", id);
+
+  if (error) return alert(error.message);
+
+  loadDashboard();
+  loadScheduleDashboard();
 }
 
 /* =========================
@@ -395,16 +399,21 @@ function openCraneList() { window.open("cranes.html", "_blank"); }
 function openRemarkList() { window.open("remarks.html", "_blank"); }
 function openHoldList() { window.open("holds.html", "_blank"); }
 
+// ✅ v2 추가: 타워크레인 리스트 열기
+function openTowerCraneList() { window.open("tower_cranes.html", "_blank"); }
+
 /* =========================
    자동 실행
 ========================= */
 document.addEventListener("DOMContentLoaded", () => {
-  // 메인
-  loadDashboard();
-  loadScheduleDashboard();
-
-  // 크레인리스트 페이지면 리스트 로드
+  // 크레인 리스트 페이지면 로드
   if (document.getElementById("craneList")) loadCranes();
+
+  // 메인(index) 페이지면 대시보드 로드
+  if (document.getElementById("dashboard")) {
+    loadDashboard();
+    loadScheduleDashboard(); // ✅ v2 추가
+  }
 });
 
 /* =========================
@@ -420,14 +429,15 @@ window.releaseCraneHold = releaseCraneHold;
 window.saveInspection = saveInspection;
 window.resetInspectionStatus = resetInspectionStatus;
 
-window.loadScheduleDashboard = loadScheduleDashboard;
-window.scheduleSetStatus = scheduleSetStatus;
-
 window.toggleHoistDetail = toggleHoistDetail;
-window.clearCraneForm = clearCraneForm;
+window.autoCraneNoPrefix = autoCraneNoPrefix;
+
+// ✅ v2 추가 바인딩(점검예정)
+window.loadScheduleDashboard = loadScheduleDashboard;
+window.scheduleSetComplete = scheduleSetComplete;
+window.scheduleSetHold = scheduleSetHold;
 
 window.openCraneList = openCraneList;
+window.openTowerCraneList = openTowerCraneList; // ✅ v2 추가
 window.openRemarkList = openRemarkList;
 window.openHoldList = openHoldList;
-
-window.autoCraneNoPrefix = autoCraneNoPrefix;
