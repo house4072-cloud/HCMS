@@ -24,21 +24,10 @@
       justify-content: space-between;
     }
 
-    .topbar img {
-      height: 44px;
-    }
+    .topbar img { height: 44px; object-fit: contain; }
+    .topbar .title { font-size: 28px; font-weight: 900; color: #000; }
 
-    .topbar .title {
-      font-size: 28px;
-      font-weight: 900;
-      color: #000;
-    }
-
-    .container {
-      max-width: 1600px;
-      margin: auto;
-      padding: 32px;
-    }
+    .container { max-width: 1600px; margin: auto; padding: 32px; }
 
     .card {
       background: #1a1a22;
@@ -47,12 +36,8 @@
       margin-bottom: 28px;
     }
 
-    h2 {
-      margin: 0 0 20px 0;
-      font-size: 26px;
-    }
+    h2 { margin: 0 0 20px 0; font-size: 26px; }
 
-    /* ===== 필터 / 입력 ===== */
     .form-grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
@@ -66,6 +51,7 @@
       padding: 0 14px;
       border-radius: 10px;
       border: none;
+      box-sizing: border-box;
     }
 
     .btn {
@@ -80,12 +66,6 @@
       color: #000;
     }
 
-    .btn.warn {
-      background: #ff4444;
-      color: #fff;
-    }
-
-    /* ===== 테이블 ===== */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -96,21 +76,28 @@
       border: 1px solid #333;
       padding: 12px;
       text-align: center;
+      vertical-align: middle;
     }
 
-    th {
-      background: #111;
-    }
+    th { background: #111; position: sticky; top: 0; z-index: 1; }
+    tr:nth-child(even) { background: #15151d; }
 
-    tr:nth-child(even) {
-      background: #15151d;
+    .btn-mini {
+      height: 40px;
+      padding: 0 10px;
+      font-size: 15px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      margin: 2px;
     }
+    .btn-mini.warn { background: #ff4444; color: #fff; }
+    .btn-mini.gray { background: #333; color: #fff; }
+    .btn-mini.orange { background: #ff8a00; color: #000; }
 
-    /* ===== 반응형 ===== */
     @media (max-width: 900px) {
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
+      .form-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -125,16 +112,11 @@
 
 <main class="container">
 
-  <!-- ===== 필터 ===== -->
+  <!-- ===== 필터 (타워는 번호없음 없음) ===== -->
   <section class="card">
     <h2>필터</h2>
     <div class="form-grid">
-      <input id="f_no" class="input" placeholder="크레인 번호 (TC-)" />
-      <select id="f_no_type" class="input">
-        <option value="">번호 전체</option>
-        <option value="exists">번호 있음</option>
-        <option value="none">번호 없음</option>
-      </select>
+      <input id="f_no" class="input" placeholder="크레인 번호 (예: TC-203 또는 203)" />
       <select id="f_area" class="input">
         <option value="">지역 전체</option>
         <option value="A">A</option>
@@ -149,15 +131,15 @@
         <option value="미완">미완</option>
         <option value="미점검">미점검</option>
       </select>
+      <button class="btn" onclick="loadTowerCranes()">필터 적용</button>
     </div>
-    <button class="btn" onclick="loadTowerCranes()">필터 적용</button>
   </section>
 
   <!-- ===== 등록 ===== -->
   <section class="card">
     <h2>타워크레인 등록</h2>
     <div class="form-grid">
-      <input id="c_no" class="input" placeholder="번호 (숫자만 입력 → TC-자동)" />
+      <input id="c_no" class="input" placeholder="번호 (숫자만 → TC-자동)" onblur="autoTowerNoPrefix()" />
       <select id="c_area" class="input">
         <option value="">지역 선택</option>
         <option value="A">A</option>
@@ -168,7 +150,8 @@
       <input id="c_wire" class="input" placeholder="와이어 파이 (숫자)" />
       <input id="c_trolley" class="input" placeholder="트롤리 파이 (숫자)" />
     </div>
-    <button class="btn" onclick="addTowerCrane()">타워크레인 등록</button>
+
+    <button class="btn" onclick="addTowerCrane()">타워크레인 등록/수정 저장</button>
   </section>
 
   <!-- ===== 리스트 ===== -->
@@ -193,8 +176,203 @@
 
 </main>
 
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js"></script>
+
+<script>
+  // ✅ tower_cranes.html은 app.js 함수에 의존하지 않게 "자체 동작"으로 고침
+  const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA";
+  const sb_tower = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let editingTowerId = null;
+
+  function autoTowerNoPrefix() {
+    const el = document.getElementById("c_no");
+    if (!el) return;
+    let v = (el.value || "").trim();
+    if (!v) return;
+
+    // 이미 TC-면 패스
+    if (v.toUpperCase().startsWith("TC-")) return;
+
+    // 숫자만이면 TC- 자동
+    if (/^\d+$/.test(v)) el.value = `TC-${v}`;
+  }
+
+  function _parseWireTrolley(hoistSpec) {
+    // 저장형식: "WIRE:10;TROLLEY:12" (없으면 빈값)
+    const out = { wire: "", trolley: "" };
+    if (!hoistSpec) return out;
+    const parts = String(hoistSpec).split(";");
+    parts.forEach(p => {
+      const [k, v] = p.split(":");
+      if (!k) return;
+      if (k.trim().toUpperCase() === "WIRE") out.wire = (v || "").trim();
+      if (k.trim().toUpperCase() === "TROLLEY") out.trolley = (v || "").trim();
+    });
+    return out;
+  }
+
+  function _makeHoistSpec(wire, trolley) {
+    const w = (wire || "").trim();
+    const t = (trolley || "").trim();
+    const wv = w ? `WIRE:${w}` : `WIRE:`;
+    const tv = t ? `TROLLEY:${t}` : `TROLLEY:`;
+    return `${wv};${tv}`;
+  }
+
+  async function loadTowerCranes() {
+    let query = sb_tower.from("cranes").select("*").eq("crane_type", "타워");
+
+    const noRaw = document.getElementById("f_no")?.value?.trim();
+    const area = document.getElementById("f_area")?.value || "";
+    const brand = document.getElementById("f_brand")?.value?.trim() || "";
+    const ton = document.getElementById("f_ton")?.value?.trim() || "";
+    const status = document.getElementById("f_status")?.value || "";
+
+    // 번호: 숫자만이면 TC- 붙여서 검색
+    let no = noRaw || "";
+    if (no && /^\d+$/.test(no)) no = `TC-${no}`;
+    if (no) query = query.ilike("crane_no", `%${no}%`);
+
+    if (area) query = query.eq("area", area);
+    if (brand) query = query.ilike("brand", `%${brand}%`);
+    if (ton) query = query.eq("ton", Number(ton));
+    if (status) query = query.eq("inspection_status", status);
+
+    const { data, error } = await query.order("crane_no", { ascending: true });
+    if (error) return alert(error.message);
+
+    const tbody = document.getElementById("towerCraneList");
+    tbody.innerHTML = "";
+
+    (data || []).forEach(c => {
+      const wt = _parseWireTrolley(c.hoist_spec);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${c.crane_no || ""}</td>
+        <td>${c.area || ""}</td>
+        <td>${c.brand || ""}</td>
+        <td>${c.ton ?? ""}</td>
+        <td>${wt.wire || ""}</td>
+        <td>${wt.trolley || ""}</td>
+        <td>${c.inspection_status || ""}</td>
+        <td>
+          ${
+            c.inspection_status === "보류"
+              ? `<button class="btn-mini gray" onclick="releaseTowerHold('${c.id}')">해제</button>`
+              : `<button class="btn-mini orange" onclick="setTowerHold('${c.id}')">보류</button>`
+          }
+          <button class="btn-mini gray" onclick="loadTowerToForm('${c.id}')">수정</button>
+          <button class="btn-mini warn" onclick="deleteTower('${c.id}')">삭제</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function addTowerCrane() {
+    let crane_no = document.getElementById("c_no")?.value?.trim();
+    if (!crane_no) return alert("타워크레인 번호 필수");
+
+    // 숫자만 입력하면 TC- 자동
+    if (/^\d+$/.test(crane_no)) crane_no = `TC-${crane_no}`;
+    if (!crane_no.toUpperCase().startsWith("TC-")) {
+      return alert("타워크레인 번호는 TC- 로 시작해야 합니다. (예: TC-203)");
+    }
+
+    const area = document.getElementById("c_area")?.value || null;
+    const brand = document.getElementById("c_brand")?.value?.trim() || null;
+
+    const tonRaw = document.getElementById("c_ton")?.value?.trim();
+    const ton = tonRaw ? Number(tonRaw) : null;
+
+    const wire = document.getElementById("c_wire")?.value?.trim() || "";
+    const trolley = document.getElementById("c_trolley")?.value?.trim() || "";
+
+    // ✅ 단위 자동 느낌(표시용): 숫자만 받되 저장은 숫자 그대로
+    if (wire && !/^\d+(\.\d+)?$/.test(wire)) return alert("와이어 파이는 숫자만 입력");
+    if (trolley && !/^\d+(\.\d+)?$/.test(trolley)) return alert("트롤리 파이는 숫자만 입력");
+
+    const payload = {
+      crane_no,
+      crane_type: "타워",
+      area,
+      brand,
+      ton,
+      hoist_type: "Tower",
+      hoist_spec: _makeHoistSpec(wire, trolley)
+    };
+
+    const res = editingTowerId
+      ? await sb_tower.from("cranes").update(payload).eq("id", editingTowerId)
+      : await sb_tower.from("cranes").insert(payload);
+
+    if (res.error) return alert(res.error.message);
+
+    alert(editingTowerId ? "수정 완료" : "등록 완료");
+    editingTowerId = null;
+
+    // 입력 초기화
+    ["c_no","c_area","c_brand","c_ton","c_wire","c_trolley"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
+
+    loadTowerCranes();
+  }
+
+  async function loadTowerToForm(id) {
+    const { data, error } = await sb_tower.from("cranes").select("*").eq("id", id).single();
+    if (error || !data) return alert(error?.message || "데이터 없음");
+
+    editingTowerId = id;
+
+    document.getElementById("c_no").value = data.crane_no || "";
+    document.getElementById("c_area").value = data.area || "";
+    document.getElementById("c_brand").value = data.brand || "";
+    document.getElementById("c_ton").value = data.ton ?? "";
+
+    const wt = _parseWireTrolley(data.hoist_spec);
+    document.getElementById("c_wire").value = wt.wire || "";
+    document.getElementById("c_trolley").value = wt.trolley || "";
+  }
+
+  async function deleteTower(id) {
+    if (!confirm("정말 삭제할까요?")) return;
+    const { error } = await sb_tower.from("cranes").delete().eq("id", id);
+    if (error) return alert(error.message);
+    loadTowerCranes();
+  }
+
+  async function setTowerHold(id) {
+    const reason = prompt("보류 사유");
+    if (!reason) return;
+
+    const { error } = await sb_tower.from("cranes").update({
+      inspection_status: "보류",
+      hold_reason: reason
+    }).eq("id", id);
+
+    if (error) return alert(error.message);
+    loadTowerCranes();
+  }
+
+  async function releaseTowerHold(id) {
+    const { error } = await sb_tower.from("cranes").update({
+      inspection_status: "미완료",
+      hold_reason: null
+    }).eq("id", id);
+
+    if (error) return alert(error.message);
+    loadTowerCranes();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    loadTowerCranes();
+  });
+</script>
 
 </body>
 </html>
