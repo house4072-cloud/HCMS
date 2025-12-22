@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HCMS</title>
 
+  <!-- 공용 CSS -->
   <link rel="stylesheet" href="assets/hcms.css">
 
   <style>
@@ -15,32 +16,29 @@
       color: #fff;
     }
 
-    /* ===== TOPBAR (PC / MOBILE 공통, 절대 안정) ===== */
+    /* ===== TOPBAR (PC / 모바일 공통 안정 구조) ===== */
     .topbar {
       position: relative;
       background: #ff8a00;
-      padding: 16px 24px;
+      padding: 16px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
-    .logo {
-      height: 56px;            /* 🔥 로고 키움 */
-      width: auto;
-      max-width: 200px;
+    .topbar img {
+      height: 56px;   /* 🔥 로고 크기 키움 */
       object-fit: contain;
     }
 
-    .title {
+    .topbar .title {
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 34px;         /* 🔥 타이틀 확실히 보이게 */
-      font-weight: bold;
+      font-size: 34px;
+      font-weight: 900;
       color: #000;
       white-space: nowrap;
-      pointer-events: none;    /* 클릭 간섭 방지 */
     }
 
     /* ===== MAIN ===== */
@@ -63,7 +61,7 @@
       font-size: 28px;
     }
 
-    /* ===== DASHBOARD ===== */
+    /* ===== 대시보드 ===== */
     .dash {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -86,7 +84,7 @@
       color: #ff8a00;
     }
 
-    /* ===== FORM ===== */
+    /* ===== 입력 폼 ===== */
     .form-grid {
       display: grid;
       grid-template-columns: 180px 1fr;
@@ -95,7 +93,9 @@
       margin-bottom: 28px;
     }
 
-    label { font-size: 20px; }
+    label {
+      font-size: 20px;
+    }
 
     .input {
       height: 60px;
@@ -105,7 +105,7 @@
       border: none;
     }
 
-    /* ===== BUTTON ===== */
+    /* ===== 버튼 ===== */
     .btn-row {
       display: flex;
       gap: 24px;
@@ -129,23 +129,22 @@
       color: #fff;
     }
 
-    /* ===== MOBILE ===== */
+    /* ===== 반응형 ===== */
     @media (max-width: 900px) {
-      .logo {
-        height: 44px;        /* 모바일에서만 살짝 축소 */
-        max-width: 150px;
-      }
-
-      .title {
-        font-size: 28px;
-      }
-
       .dash {
         grid-template-columns: repeat(2, 1fr);
       }
 
       .form-grid {
         grid-template-columns: 1fr;
+      }
+
+      .topbar img {
+        height: 44px;
+      }
+
+      .topbar .title {
+        font-size: 26px;
       }
     }
   </style>
@@ -154,13 +153,14 @@
 <body>
 
 <header class="topbar">
-  <img src="assets/hope.png" class="logo" alt="희망이엔지">
+  <img src="assets/hope.png" alt="희망이엔지">
   <div class="title">HCMS</div>
-  <img src="assets/hanwha.png" class="logo" alt="한화에너지">
+  <img src="assets/hanwha.png" alt="한화에너지">
 </header>
 
 <main class="container">
 
+  <!-- 대시보드 -->
   <section class="card" id="dashboard">
     <h2>점검 현황</h2>
     <div class="dash">
@@ -172,6 +172,7 @@
     </div>
   </section>
 
+  <!-- 점검 입력 -->
   <section class="card">
     <h2>크레인 점검 입력</h2>
 
@@ -199,6 +200,7 @@
     </div>
   </section>
 
+  <!-- 메뉴 -->
   <section class="card">
     <h2>리스트</h2>
     <div class="btn-row">
