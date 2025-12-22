@@ -16,13 +16,22 @@
       color: #fff;
     }
 
-    /* ===== TOPBAR ===== */
+    /* ===== TOPBAR (기본: PC) ===== */
     .topbar {
       background: #ff8a00;
-      padding: 14px 24px;
+      padding: 14px 20px;
       display: grid;
       grid-template-columns: auto 1fr auto;
       align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      height: 48px;
+      width: auto;
+      max-width: 180px;
+      object-fit: contain;
+      display: block;
     }
 
     .title {
@@ -30,19 +39,8 @@
       font-size: 32px;
       font-weight: bold;
       color: #000;
-    }
-
-    /* ===== 로고 ===== */
-    .logo-box {
-      display: flex;
-      align-items: center;
-    }
-
-    .logo-box img {
-      height: 48px;
-      width: auto;
-      max-width: 160px;
-      object-fit: contain;
+      line-height: 1.1;
+      white-space: nowrap;
     }
 
     /* ===== MAIN ===== */
@@ -97,9 +95,7 @@
       margin-bottom: 28px;
     }
 
-    label {
-      font-size: 20px;
-    }
+    label { font-size: 20px; }
 
     .input {
       height: 60px;
@@ -133,35 +129,30 @@
       color: #fff;
     }
 
-    /* ===== 모바일 대응 ===== */
+    /* ===== 모바일: 로고(1줄) + 타이틀(2줄) ===== */
     @media (max-width: 900px) {
       .topbar {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+        grid-template-areas:
+          "hope hanwha"
+          "title title";
+        gap: 8px 12px;
+        justify-items: center;
       }
 
-      .logo-box {
-        justify-content: center;
-      }
+      .logo-hope { grid-area: hope; justify-self: start; }
+      .logo-hanwha { grid-area: hanwha; justify-self: end; }
+      .title { grid-area: title; font-size: 26px; }
 
-      .logo-box img {
-        height: 36px;
+      .logo {
+        height: 34px;
         max-width: 140px;
       }
 
-      .title {
-        order: -1;
-        font-size: 28px;
-      }
+      .dash { grid-template-columns: repeat(2, 1fr); }
 
-      .dash {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
+      .form-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -169,18 +160,9 @@
 <body>
 
 <header class="topbar">
-  <!-- 좌측 로고 -->
-  <div class="logo-box">
-    <img src="assets/hope.png" alt="희망이엔지">
-  </div>
-
-  <!-- 중앙 타이틀 -->
+  <img src="assets/hope.png" class="logo logo-hope" alt="희망이엔지">
   <div class="title">HCMS</div>
-
-  <!-- 우측 로고 -->
-  <div class="logo-box">
-    <img src="assets/hanwha.png" alt="한화에너지">
-  </div>
+  <img src="assets/hanwha.png" class="logo logo-hanwha" alt="한화에너지">
 </header>
 
 <main class="container">
@@ -237,9 +219,7 @@
 
 </main>
 
-<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- App -->
 <script src="app.js"></script>
 
 </body>
