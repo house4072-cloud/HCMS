@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HCMS | 타워크레인 리스트</title>
+
+  <!-- 공용 CSS -->
+  <link rel="stylesheet" href="assets/hcms.css">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0e0e11;
+      color: #fff;
+    }
+
+    .topbar {
+      background: #ff8a00;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .topbar img {
+      height: 44px;
+    }
+
+    .topbar .title {
+      font-size: 28px;
+      font-weight: 900;
+      color: #000;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: auto;
+      padding: 32px;
+    }
+
+    .card {
+      background: #1a1a22;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 28px;
+    }
+
+    h2 {
+      margin: 0 0 20px 0;
+      font-size: 26px;
+    }
+
+    /* ===== 필터 / 입력 ===== */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .input, select {
+      height: 56px;
+      font-size: 18px;
+      padding: 0 14px;
+      border-radius: 10px;
+      border: none;
+    }
+
+    .btn {
+      height: 56px;
+      padding: 0 24px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      background: #ff8a00;
+      color: #000;
+    }
+
+    .btn.warn {
+      background: #ff4444;
+      color: #fff;
+    }
+
+    /* ===== 테이블 ===== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 17px;
+    }
+
+    th, td {
+      border: 1px solid #333;
+      padding: 12px;
+      text-align: center;
+    }
+
+    th {
+      background: #111;
+    }
+
+    tr:nth-child(even) {
+      background: #15151d;
+    }
+
+    /* ===== 반응형 ===== */
+    @media (max-width: 900px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <img src="assets/hope.png" alt="희망이엔지">
+  <div class="title">타워크레인 리스트</div>
+  <img src="assets/hanwha.png" alt="한화에너지">
+</header>
+
+<main class="container">
+
+  <!-- ===== 필터 ===== -->
+  <section class="card">
+    <h2>필터</h2>
+    <div class="form-grid">
+      <input id="f_no" class="input" placeholder="크레인 번호 (TC-)" />
+      <select id="f_no_type" class="input">
+        <option value="">번호 전체</option>
+        <option value="exists">번호 있음</option>
+        <option value="none">번호 없음</option>
+      </select>
+      <select id="f_area" class="input">
+        <option value="">지역 전체</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+      </select>
+      <input id="f_brand" class="input" placeholder="브랜드" />
+      <input id="f_ton" class="input" placeholder="톤수" />
+      <select id="f_status" class="input">
+        <option value="">상태 전체</option>
+        <option value="완료">완료</option>
+        <option value="보류">보류</option>
+        <option value="미완">미완</option>
+        <option value="미점검">미점검</option>
+      </select>
+    </div>
+    <button class="btn" onclick="loadTowerCranes()">필터 적용</button>
+  </section>
+
+  <!-- ===== 등록 ===== -->
+  <section class="card">
+    <h2>타워크레인 등록</h2>
+    <div class="form-grid">
+      <input id="c_no" class="input" placeholder="번호 (숫자만 입력 → TC-자동)" />
+      <select id="c_area" class="input">
+        <option value="">지역 선택</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+      </select>
+      <input id="c_brand" class="input" placeholder="브랜드" />
+      <input id="c_ton" class="input" placeholder="톤수" />
+      <input id="c_wire" class="input" placeholder="와이어 파이 (숫자)" />
+      <input id="c_trolley" class="input" placeholder="트롤리 파이 (숫자)" />
+    </div>
+    <button class="btn" onclick="addTowerCrane()">타워크레인 등록</button>
+  </section>
+
+  <!-- ===== 리스트 ===== -->
+  <section class="card">
+    <h2>리스트</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>번호</th>
+          <th>지역</th>
+          <th>브랜드</th>
+          <th>톤수</th>
+          <th>와이어</th>
+          <th>트롤리</th>
+          <th>상태</th>
+          <th>관리</th>
+        </tr>
+      </thead>
+      <tbody id="towerCraneList"></tbody>
+    </table>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
