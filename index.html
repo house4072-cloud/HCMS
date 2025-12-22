@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HCMS</title>
 
-  <!-- 공용 CSS -->
   <link rel="stylesheet" href="assets/hcms.css">
 
   <style>
@@ -16,31 +15,32 @@
       color: #fff;
     }
 
-    /* ===== TOPBAR (기본: PC) ===== */
+    /* ===== TOPBAR (PC / MOBILE 공통, 절대 안정) ===== */
     .topbar {
+      position: relative;
       background: #ff8a00;
-      padding: 14px 20px;
-      display: grid;
-      grid-template-columns: auto 1fr auto;
+      padding: 16px 24px;
+      display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: space-between;
     }
 
     .logo {
-      height: 48px;
+      height: 56px;            /* 🔥 로고 키움 */
       width: auto;
-      max-width: 180px;
+      max-width: 200px;
       object-fit: contain;
-      display: block;
     }
 
     .title {
-      text-align: center;
-      font-size: 32px;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 34px;         /* 🔥 타이틀 확실히 보이게 */
       font-weight: bold;
       color: #000;
-      line-height: 1.1;
       white-space: nowrap;
+      pointer-events: none;    /* 클릭 간섭 방지 */
     }
 
     /* ===== MAIN ===== */
@@ -63,7 +63,7 @@
       font-size: 28px;
     }
 
-    /* ===== 대시보드 ===== */
+    /* ===== DASHBOARD ===== */
     .dash {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -86,7 +86,7 @@
       color: #ff8a00;
     }
 
-    /* ===== 입력 폼 ===== */
+    /* ===== FORM ===== */
     .form-grid {
       display: grid;
       grid-template-columns: 180px 1fr;
@@ -105,7 +105,7 @@
       border: none;
     }
 
-    /* ===== 버튼 ===== */
+    /* ===== BUTTON ===== */
     .btn-row {
       display: flex;
       gap: 24px;
@@ -129,30 +129,24 @@
       color: #fff;
     }
 
-    /* ===== 모바일: 로고(1줄) + 타이틀(2줄) ===== */
+    /* ===== MOBILE ===== */
     @media (max-width: 900px) {
-      .topbar {
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: auto auto;
-        grid-template-areas:
-          "hope hanwha"
-          "title title";
-        gap: 8px 12px;
-        justify-items: center;
-      }
-
-      .logo-hope { grid-area: hope; justify-self: start; }
-      .logo-hanwha { grid-area: hanwha; justify-self: end; }
-      .title { grid-area: title; font-size: 26px; }
-
       .logo {
-        height: 34px;
-        max-width: 140px;
+        height: 44px;        /* 모바일에서만 살짝 축소 */
+        max-width: 150px;
       }
 
-      .dash { grid-template-columns: repeat(2, 1fr); }
+      .title {
+        font-size: 28px;
+      }
 
-      .form-grid { grid-template-columns: 1fr; }
+      .dash {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -160,14 +154,13 @@
 <body>
 
 <header class="topbar">
-  <img src="assets/hope.png" class="logo logo-hope" alt="희망이엔지">
+  <img src="assets/hope.png" class="logo" alt="희망이엔지">
   <div class="title">HCMS</div>
-  <img src="assets/hanwha.png" class="logo logo-hanwha" alt="한화에너지">
+  <img src="assets/hanwha.png" class="logo" alt="한화에너지">
 </header>
 
 <main class="container">
 
-  <!-- 대시보드 -->
   <section class="card" id="dashboard">
     <h2>점검 현황</h2>
     <div class="dash">
@@ -179,7 +172,6 @@
     </div>
   </section>
 
-  <!-- 점검 입력 -->
   <section class="card">
     <h2>크레인 점검 입력</h2>
 
@@ -207,7 +199,6 @@
     </div>
   </section>
 
-  <!-- 메뉴 -->
   <section class="card">
     <h2>리스트</h2>
     <div class="btn-row">
