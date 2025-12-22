@@ -121,7 +121,7 @@ async function loadCranes() {
    - cranes 업데이트 + inspections 로그 기록
 ========================= */
 async function markCraneComplete(id, crane_no) {
-  if (!confirm(`${crane_no} 완료 처리할까?`)) return;
+  if (!confirm(`${crane_no} 완료 처리할까요?`)) return;
 
   const next_due = addMonthsISO(3);
 
