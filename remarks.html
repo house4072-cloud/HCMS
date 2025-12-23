@@ -192,7 +192,6 @@
     let query = sb
       .from("remarks")
       .select("id, crane_no, crane_type, area, content")
-      .order("created_at", { ascending: false });
 
     if (no) query = query.ilike("crane_no", `%${no}%`);
     if (area) query = query.eq("area", area);
