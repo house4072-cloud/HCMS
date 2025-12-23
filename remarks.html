@@ -3,214 +3,108 @@
 <head>
   <meta charset="UTF-8" />
   <title>HCMS | 비고 리스트</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <link rel="stylesheet" href="assets/hcms.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
 
   <style>
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
-      background: #f2f2f2;
+      padding: 24px;
+      background: #f2f3f5;
       color: #222;
     }
 
-    /* ===== 상단바 ===== */
-    .topbar {
-      background: #ff8a00;
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .topbar img { height: 42px; }
-
-    .topbar .title {
-      font-size: 26px;
-      font-weight: 900;
-      color: #000;
-    }
-
-    .container {
-      max-width: 1600px;
-      margin: auto;
-      padding: 28px;
-    }
-
-    .card {
-      background: #fff;
-      border-radius: 14px;
-      padding: 24px;
-      margin-bottom: 24px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    }
-
-    h2 { margin: 0 0 18px 0; }
-
-    /* ===== 필터 ===== */
-    .filter-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-      margin-bottom: 16px;
-    }
-
-    input, select {
-      height: 52px;
-      font-size: 16px;
-      padding: 0 12px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-
-    .btn {
-      height: 52px;
-      padding: 0 20px;
-      font-size: 15px;
-      font-weight: bold;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      background: #ff8a00;
-      color: #000;
-    }
-
-    .btn.danger {
-      background: #ff4444;
-      color: #fff;
-    }
+    h1 { margin-bottom: 20px; }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 15px;
+      background: #fff;
     }
 
     th, td {
-      border: 1px solid #ddd;
+      border: 1px solid #ccc;
       padding: 14px;
       text-align: center;
-      vertical-align: middle;
+      vertical-align: top;
     }
 
-    th { background: #f0f0f0; }
+    th {
+      background: #ff8a00;
+      color: #000;
+    }
 
     td.remark {
       text-align: left;
-      min-width: 380px;
+      min-width: 400px;
       white-space: pre-wrap;
-      line-height: 1.5;
     }
 
-    tr:nth-child(even) { background: #fafafa; }
+    button {
+      padding: 6px 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
   </style>
 </head>
 
 <body>
 
-<header class="topbar">
-  <img src="assets/hope.png">
-  <div class="title">비고 리스트</div>
-  <img src="assets/hanwha.png">
-</header>
+<h1>비고 리스트</h1>
 
-<main class="container">
-
-  <!-- 필터 -->
-  <section class="card">
-    <h2>필터</h2>
-    <div class="filter-grid">
-      <input id="f_no" placeholder="크레인 번호">
-      <select id="f_area">
-        <option value="">지역 전체</option>
-        <option value="A">A</option>
-        <option value="B">B</option>
-      </select>
-      <select id="f_type">
-        <option value="">타입 전체</option>
-        <option value="EOT">EOT</option>
-        <option value="Suspension">Suspension</option>
-        <option value="Gantry">Gantry</option>
-        <option value="Post">Post</option>
-        <option value="Wall">Wall</option>
-        <option value="Monorail">Monorail</option>
-        <option value="Service Crane">Service Crane</option>
-        <option value="타워">타워</option>
-      </select>
-      <button class="btn" onclick="loadRemarks()">필터 적용</button>
-    </div>
-  </section>
-
-  <!-- 리스트 -->
-  <section class="card">
-    <h2>비고 목록</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>번호</th>
-          <th>타입</th>
-          <th>지역</th>
-          <th>비고</th>
-          <th>작성일</th>
-          <th>관리</th>
-        </tr>
-      </thead>
-      <tbody id="remarkList"></tbody>
-    </table>
-  </section>
-
-</main>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<table>
+  <thead>
+    <tr>
+      <th>번호</th>
+      <th>크레인 타입</th>
+      <th>지역</th>
+      <th>위치</th>
+      <th>비고</th>
+      <th>관리</th>
+    </tr>
+  </thead>
+  <tbody id="remarkList"></tbody>
+</table>
 
 <script>
-const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA";
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 async function loadRemarks() {
-  const no = f_no.value.trim();
-  const area = f_area.value;
-  const type = f_type.value;
-
-  const { data: remarks, error } = await sb
+  const { data: remarks, error: rErr } = await sb
     .from("remarks")
-    .select("id, crane_no, content, created_at")
+    .select("*")
     .order("created_at", { ascending: false });
 
-  if (error) return alert(error.message);
+  if (rErr) return alert(rErr.message);
 
-  const craneNos = [...new Set(remarks.map(r => r.crane_no))];
-  const { data: cranes } = await sb
+  const { data: cranes, error: cErr } = await sb
     .from("cranes")
-    .select("crane_no, crane_type, area")
-    .in("crane_no", craneNos);
+    .select("crane_no, crane_type, area, group_name");
+
+  if (cErr) return alert(cErr.message);
 
   const craneMap = {};
-  (cranes || []).forEach(c => craneMap[c.crane_no] = c);
+  cranes.forEach(c => craneMap[c.crane_no] = c);
 
-  remarkList.innerHTML = "";
+  const tbody = document.getElementById("remarkList");
+  tbody.innerHTML = "";
 
   remarks.forEach(r => {
     const c = craneMap[r.crane_no] || {};
-    if (no && !r.crane_no.includes(no)) return;
-    if (area && c.area !== area) return;
-    if (type && c.crane_type !== type) return;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${r.crane_no}</td>
       <td>${c.crane_type || ""}</td>
       <td>${c.area || ""}</td>
+      <td>${c.group_name || ""}</td>
       <td class="remark">${r.content}</td>
-      <td>${r.created_at?.slice(0,10)}</td>
       <td>
-        <button class="btn" onclick="editRemark('${r.id}','${r.content.replace(/'/g,"&#39;")}')">수정</button>
-        <button class="btn danger" onclick="deleteRemark('${r.id}')">삭제</button>
+        <button onclick="editRemark('${r.id}', '${r.content.replace(/'/g, "\\'")}')">수정</button>
+        <button onclick="deleteRemark('${r.id}')">삭제</button>
       </td>
     `;
-    remarkList.appendChild(tr);
+    tbody.appendChild(tr);
   });
 }
 
@@ -228,7 +122,7 @@ async function editRemark(id, oldText) {
 }
 
 async function deleteRemark(id) {
-  if (!confirm("정말 삭제하시겠습니까?")) return;
+  if (!confirm("삭제할까요?")) return;
 
   const { error } = await sb
     .from("remarks")
