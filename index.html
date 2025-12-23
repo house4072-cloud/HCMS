@@ -5,164 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HCMS</title>
 
-  <!-- 공용 CSS -->
   <link rel="stylesheet" href="assets/hcms.css">
-
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0e0e11;
-      color: #fff;
-    }
-
-    /* ===== TOPBAR (PC / 모바일 공통 안정 구조) ===== */
-    .topbar {
-      position: relative;
-      background: #ff8a00;
-      padding: 16px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .topbar img {
-      height: 56px;
-      object-fit: contain;
-    }
-
-    .topbar .title {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 34px;
-      font-weight: 900;
-      color: #000;
-      white-space: nowrap;
-    }
-
-    /* ===== MAIN ===== */
-    .container {
-      max-width: 1600px;
-      margin: auto;
-      padding: 32px;
-    }
-
-    .card {
-      background: #1a1a22;
-      border-radius: 16px;
-      padding: 28px;
-      margin-bottom: 28px;
-    }
-
-    h2 {
-      margin-top: 0;
-      margin-bottom: 24px;
-      font-size: 28px;
-    }
-
-    /* ===== 대시보드 ===== */
-    .dash {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 24px;
-    }
-
-    .dash-item {
-      background: #111;
-      border-radius: 14px;
-      padding: 24px;
-      text-align: center;
-      font-size: 22px;
-    }
-
-    .dash-item span {
-      display: block;
-      margin-top: 12px;
-      font-size: 44px;
-      font-weight: bold;
-      color: #ff8a00;
-    }
-
-    /* ===== 입력 폼 ===== */
-    .form-grid {
-      display: grid;
-
-      /* ✅ PATCH: 라벨 폭을 줄여서 입력칸(2열) 가로를 더 확보 */
-      grid-template-columns: 140px minmax(0, 1fr);
-
-      gap: 20px 18px;
-      align-items: center;
-      margin-bottom: 28px;
-    }
-
-    label {
-      font-size: 20px;
-    }
-
-    .input {
-      height: 60px;
-      font-size: 20px;
-      padding: 0 16px;
-      border-radius: 10px;
-      border: none;
-
-      /* ✅ PATCH: hcms.css에서 width 잡아도 이걸로 이김 */
-      width: 100% !important;
-      box-sizing: border-box;
-      min-width: 0;
-    }
-
-    /* ✅ PATCH: “크레인번호/비고”만 더 넓게 보이도록(가로 공간 확보 + 충돌 방지) */
-    #i_crane_no,
-    #i_comment {
-      width: 100% !important;
-      min-width: 0;
-    }
-
-    /* ===== 버튼 ===== */
-    .btn-row {
-      display: flex;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      height: 68px;
-      padding: 0 36px;
-      font-size: 22px;
-      font-weight: bold;
-      border-radius: 12px;
-      border: none;
-      cursor: pointer;
-      background: #ff8a00;
-      color: #000;
-    }
-
-    .btn.warn {
-      background: #ff4444;
-      color: #fff;
-    }
-
-    /* ===== 반응형 ===== */
-    @media (max-width: 900px) {
-      .dash {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .topbar img {
-        height: 44px;
-      }
-
-      .topbar .title {
-        font-size: 26px;
-      }
-    }
-  </style>
 </head>
 
 <body>
@@ -178,22 +21,38 @@
   <!-- 대시보드 -->
   <section class="card" id="dashboard">
     <h2>점검 현황</h2>
-    <div class="dash">
-      <div class="dash-item">전체 <span id="d_total">0</span></div>
-      <div class="dash-item">완료 <span id="d_done">0</span></div>
-      <div class="dash-item">보류 <span id="d_hold">0</span></div>
-      <div class="dash-item">미완 <span id="d_fail">0</span></div>
-      <div class="dash-item">미점검 <span id="d_none">0</span></div>
+    <div class="dash" style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;">
+      <div class="dash-item" style="background:var(--hcms-box);border:1px solid var(--hcms-line);border-radius:14px;padding:18px;text-align:center;">
+        전체 <div id="d_total" style="font-size:40px;font-weight:900;color:var(--hcms-orange);margin-top:6px;">0</div>
+      </div>
+      <div class="dash-item" style="background:var(--hcms-box);border:1px solid var(--hcms-line);border-radius:14px;padding:18px;text-align:center;">
+        완료 <div id="d_done" style="font-size:40px;font-weight:900;color:var(--hcms-orange);margin-top:6px;">0</div>
+      </div>
+      <div class="dash-item" style="background:var(--hcms-box);border:1px solid var(--hcms-line);border-radius:14px;padding:18px;text-align:center;">
+        보류 <div id="d_hold" style="font-size:40px;font-weight:900;color:var(--hcms-orange);margin-top:6px;">0</div>
+      </div>
+      <div class="dash-item" style="background:var(--hcms-box);border:1px solid var(--hcms-line);border-radius:14px;padding:18px;text-align:center;">
+        미완 <div id="d_fail" style="font-size:40px;font-weight:900;color:var(--hcms-orange);margin-top:6px;">0</div>
+      </div>
+      <div class="dash-item" style="background:var(--hcms-box);border:1px solid var(--hcms-line);border-radius:14px;padding:18px;text-align:center;">
+        미점검 <div id="d_none" style="font-size:40px;font-weight:900;color:var(--hcms-orange);margin-top:6px;">0</div>
+      </div>
     </div>
+
+    <style>
+      @media (max-width:900px){
+        .dash{ grid-template-columns:repeat(2,1fr)!important; }
+      }
+    </style>
   </section>
 
   <!-- 점검 입력 -->
   <section class="card">
     <h2>크레인 점검 입력</h2>
 
-    <div class="form-grid">
+    <div style="display:grid;grid-template-columns:160px 1fr;gap:16px;align-items:center;margin-bottom:18px;">
       <label>크레인 번호</label>
-      <input id="i_crane_no" class="input" placeholder="예: C-014" />
+      <input id="i_crane_no" class="input" placeholder="예: 203,678,508 / 타워는 TC-61 처럼 입력" />
 
       <label>결과</label>
       <select id="i_result" class="input">
@@ -206,10 +65,11 @@
       <input id="i_next" class="input" type="date" />
 
       <label>비고</label>
-      <input id="i_comment" class="input" placeholder="비고" />
+      <!-- ✅ 높이만 키움 -->
+      <textarea id="i_comment" class="input" placeholder="비고(메모)"></textarea>
     </div>
 
-    <div class="btn-row">
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">
       <button class="btn" onclick="saveInspection()">점검 저장</button>
       <button class="btn warn" onclick="resetInspectionStatus()">분기 리셋</button>
     </div>
@@ -219,23 +79,45 @@
   <section class="card" id="schedule-dashboard">
     <h2>점검 예정</h2>
 
-    <div class="schedule-wrap">
-      <div class="schedule-box">
-        <h3>소형 / 서비스 크레인</h3>
+    <div class="schedule-wrap" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="schedule-box" style="background:var(--hcms-box);border:1px solid var(--hcms-line);border-radius:14px;padding:16px;">
+        <h3 style="margin:0 0 10px 0;">소형 / 서비스 크레인</h3>
         <div class="schedule-list" id="schedule-small"></div>
       </div>
 
-      <div class="schedule-box">
-        <h3>타워 크레인</h3>
+      <div class="schedule-box" style="background:var(--hcms-box);border:1px solid var(--hcms-line);border-radius:14px;padding:16px;">
+        <h3 style="margin:0 0 10px 0;">타워 크레인</h3>
         <div class="schedule-list" id="schedule-tower"></div>
       </div>
     </div>
+
+    <style>
+      @media (max-width:900px){
+        .schedule-wrap{ grid-template-columns:1fr!important; }
+      }
+      .schedule-card{
+        border:1px solid var(--hcms-line);
+        border-radius:12px;
+        padding:12px;
+        margin-bottom:10px;
+        background:#fff;
+      }
+      .sc-title{ font-weight:900; font-size:18px; }
+      .sc-sub{ margin-top:4px; color:#6b7280; font-weight:700; }
+      .sc-btns{ margin-top:10px; display:flex; gap:8px; }
+      .sc-btns button{
+        height:40px; padding:0 12px; border-radius:10px;
+        border:1px solid var(--hcms-line);
+        background:#fff; cursor:pointer; font-weight:800;
+      }
+      .sc-btns button:hover{ background:#f9fafb; }
+    </style>
   </section>
 
   <!-- 메뉴 -->
   <section class="card">
     <h2>리스트</h2>
-    <div class="btn-row">
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">
       <button class="btn" onclick="openCraneList()">소형크레인 리스트</button>
       <button class="btn" onclick="openTowerCraneList()">타워크레인 리스트</button>
       <button class="btn" onclick="openRemarkList()">비고 리스트</button>
