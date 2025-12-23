@@ -15,7 +15,7 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f2f2f2; /* 🔥 밝은 회색톤 */
+      background: #f2f2f2;
       color: #222;
     }
 
@@ -29,7 +29,7 @@
     }
 
     .topbar img {
-      height: 44px;
+      height: 42px;
     }
 
     .topbar .title {
@@ -38,7 +38,7 @@
       color: #000;
     }
 
-    /* ===== 레이아웃 ===== */
+    /* ===== 컨테이너 ===== */
     .container {
       max-width: 1600px;
       margin: auto;
@@ -50,11 +50,11 @@
       border-radius: 14px;
       padding: 24px;
       margin-bottom: 24px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
 
     h2 {
-      margin: 0 0 16px 0;
+      margin: 0 0 18px 0;
       font-size: 24px;
     }
 
@@ -66,63 +66,53 @@
       margin-bottom: 16px;
     }
 
-    input, select {
-      height: 52px;
+    input, select, button {
+      height: 48px;
       font-size: 16px;
-      padding: 0 14px;
+      padding: 0 12px;
       border-radius: 8px;
       border: 1px solid #ccc;
+      box-sizing: border-box;
     }
 
-    .btn {
-      height: 52px;
-      padding: 0 24px;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 8px;
-      border: none;
+    button {
       cursor: pointer;
+      font-weight: bold;
       background: #ff8a00;
+      border: none;
       color: #000;
-    }
-
-    .btn.danger {
-      background: #ff4444;
-      color: #fff;
-    }
-
-    .btn.gray {
-      background: #ddd;
-      color: #222;
     }
 
     /* ===== 테이블 ===== */
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 16px;
+      font-size: 15px;
+      background: #fff;
     }
 
     th, td {
       border: 1px solid #ddd;
-      padding: 14px;
+      padding: 12px;
+      vertical-align: top;
       text-align: center;
-      vertical-align: middle;
     }
 
     th {
-      background: #f6f6f6;
+      background: #f0f0f0;
       font-weight: bold;
     }
 
     td.remark {
       text-align: left;
-      white-space: pre-wrap;
-      min-width: 400px; /* 🔥 비고 크게 */
+      white-space: pre-wrap; /* ✅ 줄바꿈 유지 */
     }
 
-    tr:nth-child(even) {
-      background: #fafafa;
+    .btn-mini {
+      height: 36px;
+      font-size: 14px;
+      padding: 0 10px;
+      margin: 2px;
     }
 
     /* ===== 반응형 ===== */
@@ -130,17 +120,12 @@
       .filter-grid {
         grid-template-columns: 1fr;
       }
-
-      td.remark {
-        min-width: auto;
-      }
     }
   </style>
 </head>
 
 <body>
 
-<!-- ===== 상단 ===== -->
 <header class="topbar">
   <img src="assets/hope.png" alt="희망이엔지">
   <div class="title">비고 리스트</div>
@@ -153,10 +138,24 @@
   <section class="card">
     <h2>필터</h2>
     <div class="filter-grid">
-      <input id="f_no" placeholder="크레인 번호" />
-      <input id="f_area" placeholder="지역" />
-      <input id="f_type" placeholder="크레인 타입" />
-      <button class="btn" onclick="loadRemarks()">필터 적용</button>
+      <input id="f_no" placeholder="크레인 번호">
+      <select id="f_area">
+        <option value="">지역 전체</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+      </select>
+      <select id="f_type">
+        <option value="">타입 전체</option>
+        <option value="EOT">EOT</option>
+        <option value="Suspension">Suspension</option>
+        <option value="Gantry">Gantry</option>
+        <option value="Post">Post</option>
+        <option value="Wall">Wall</option>
+        <option value="Monorail">Monorail</option>
+        <option value="Service Crane">Service Crane</option>
+        <option value="타워">타워</option>
+      </select>
+      <button onclick="loadRemarks()">필터 적용</button>
     </div>
   </section>
 
@@ -166,10 +165,10 @@
     <table>
       <thead>
         <tr>
-          <th>크레인 번호</th>
-          <th>크레인 타입</th>
+          <th>번호</th>
+          <th>타입</th>
           <th>지역</th>
-          <th>비고</th>
+          <th style="width:50%">비고</th>
           <th>관리</th>
         </tr>
       </thead>
@@ -180,20 +179,24 @@
 </main>
 
 <script>
+  // ===== Supabase 초기화 =====
   const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA";
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   async function loadRemarks() {
-    let query = sb.from("remarks").select("*").order("created_at", { ascending: false });
-
     const no = document.getElementById("f_no").value.trim();
-    const area = document.getElementById("f_area").value.trim();
-    const type = document.getElementById("f_type").value.trim();
+    const area = document.getElementById("f_area").value;
+    const type = document.getElementById("f_type").value;
+
+    let query = sb
+      .from("remarks")
+      .select("id, crane_no, crane_type, area, content")
+      .order("created_at", { ascending: false });
 
     if (no) query = query.ilike("crane_no", `%${no}%`);
-    if (area) query = query.ilike("area", `%${area}%`);
-    if (type) query = query.ilike("crane_type", `%${type}%`);
+    if (area) query = query.eq("area", area);
+    if (type) query = query.eq("crane_type", type);
 
     const { data, error } = await query;
     if (error) return alert(error.message);
@@ -209,37 +212,78 @@
         <td>${r.area || ""}</td>
         <td class="remark">${r.content || ""}</td>
         <td>
-          <button class="btn gray" onclick="editRemark('${r.id}','${r.content || ""}')">수정</button>
-          <button class="btn danger" onclick="deleteRemark('${r.id}')">삭제</button>
+          <button class="btn-mini" onclick="editRemark('${r.id}')">수정</button>
+          <button class="btn-mini" onclick="deleteRemark('${r.id}')">삭제</button>
         </td>
       `;
       tbody.appendChild(tr);
     });
   }
 
-  async function editRemark(id, oldContent) {
-    const content = prompt("비고 수정", oldContent);
-    if (content === null) return;
-
-    const { error } = await sb
-      .from("remarks")
-      .update({ content })
-      .eq("id", id);
-
+  async function deleteRemark(id) {
+    if (!confirm("비고를 삭제할까요?")) return;
+    const { error } = await sb.from("remarks").delete().eq("id", id);
     if (error) return alert(error.message);
     loadRemarks();
   }
 
-  async function deleteRemark(id) {
-    if (!confirm("비고 삭제할까요?")) return;
-
-    const { error } = await sb
+  /* ===== textarea 기반 비고 수정 (엔터 가능) ===== */
+  async function editRemark(id) {
+    const { data, error } = await sb
       .from("remarks")
-      .delete()
-      .eq("id", id);
+      .select("content")
+      .eq("id", id)
+      .single();
 
     if (error) return alert(error.message);
-    loadRemarks();
+
+    const overlay = document.createElement("div");
+    overlay.style.position = "fixed";
+    overlay.style.top = 0;
+    overlay.style.left = 0;
+    overlay.style.right = 0;
+    overlay.style.bottom = 0;
+    overlay.style.background = "rgba(0,0,0,0.4)";
+    overlay.style.display = "flex";
+    overlay.style.alignItems = "center";
+    overlay.style.justifyContent = "center";
+    overlay.style.zIndex = 9999;
+
+    const box = document.createElement("div");
+    box.style.background = "#fff";
+    box.style.padding = "20px";
+    box.style.borderRadius = "10px";
+    box.style.width = "520px";
+    box.style.maxWidth = "95%";
+
+    box.innerHTML = `
+      <h3>비고 수정</h3>
+      <textarea id="remarkEditArea"
+        style="width:100%;height:180px;font-size:15px;">${data.content || ""}</textarea>
+      <div style="text-align:right;margin-top:12px;">
+        <button onclick="document.body.removeChild(this.closest('.overlay'))">취소</button>
+        <button id="saveRemarkBtn" style="margin-left:10px;">저장</button>
+      </div>
+    `;
+
+    overlay.className = "overlay";
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    document.getElementById("saveRemarkBtn").onclick = async () => {
+      const newContent = document.getElementById("remarkEditArea").value.trim();
+      if (!newContent) return alert("비고 내용이 비어있습니다.");
+
+      const { error: upErr } = await sb
+        .from("remarks")
+        .update({ content: newContent })
+        .eq("id", id);
+
+      if (upErr) return alert(upErr.message);
+
+      document.body.removeChild(overlay);
+      loadRemarks();
+    };
   }
 
   document.addEventListener("DOMContentLoaded", loadRemarks);
