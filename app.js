@@ -4,7 +4,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* =========================
-   v3 FIX: 번호구분 필터 UI (cranes.html에서 호출)
+   번호구분 필터 UI (cranes.html에서 호출)
 ========================= */
 function applyNoModeFilterUI() {
   const mode = document.getElementById("f_no_mode")?.value || "";
@@ -36,7 +36,7 @@ function addMonthsISO(months) {
 }
 
 /* =========================
-   v4 ADD: 날짜 키보드 입력 보정
+   날짜 키보드 입력 보정
    - YYYYMMDD 입력 시 YYYY-MM-DD로 자동 변환
 ========================= */
 function normalizeDateValue(v) {
@@ -49,12 +49,28 @@ function normalizeDateValue(v) {
 }
 
 /* =========================
-   크레인 리스트 로드
-   v3 FIX:
-   - 번호구분(f_no_mode) 필터 동작
+   ✅ 다중 크레인번호 파서
+   - "203,678,508" / "203 678" / "203\n678" 전부 OK
+========================= */
+function parseCraneNoList(raw) {
+  const s = String(raw || "").trim();
+  if (!s) return [];
+  return s
+    .split(/[\s,]+/g)
+    .map(x => x.trim())
+    .filter(Boolean);
+}
+
+/* =========================
+   크레인 리스트 로드 (소형)
+   ✅ 기본: TC- 타워는 제외
+   ✅ 번호구분 필터 동작
 ========================= */
 async function loadCranes() {
   let query = sb.from("cranes").select("*");
+
+  // ✅ 소형 리스트에서는 타워(TC-) 기본 제외
+  query = query.not("crane_no", "ilike", "TC-%");
 
   const noMode = document.getElementById("f_no_mode")?.value || "";
   let no = document.getElementById("f_no")?.value?.trim();
@@ -100,9 +116,7 @@ async function loadCranes() {
       <td>${c.group_name || ""}</td>
       <td>${c.inspection_status || ""}</td>
       <td>
-        <!-- ✅ v4 추가: 리스트에서 완료 처리 -->
         <button onclick="markCraneComplete('${c.id}','${c.crane_no}')">완료</button>
-
         ${
           c.inspection_status === "보류"
             ? `<button onclick="releaseCraneHold('${c.id}')">해제</button>`
@@ -117,8 +131,7 @@ async function loadCranes() {
 }
 
 /* =========================
-   ✅ v4 추가: 리스트 완료 처리 (번호없음도 가능)
-   - cranes 업데이트 + inspections 로그 기록
+   리스트 완료 처리 (번호없음도 가능)
 ========================= */
 async function markCraneComplete(id, crane_no) {
   if (!confirm(`${crane_no} 완료 처리할까요?`)) return;
@@ -132,7 +145,6 @@ async function markCraneComplete(id, crane_no) {
 
   if (up.error) return alert(up.error.message);
 
-  // inspections 로그 (date "" 방지)
   const ins = await sb.from("inspections").insert({
     crane_no,
     inspection_date: todayISO(),
@@ -143,28 +155,20 @@ async function markCraneComplete(id, crane_no) {
 
   if (ins.error) return alert(ins.error.message);
 
-  // ✅ v5 PATCH: comment가 있으면 remarks에도 자동 insert (비고리스트 연동)
-  // (remarks 컬럼 구조가 달라도 최소 crane_no/content만 넣으면 동작하도록)
-  const { error: rErr } = await sb.from("remarks").insert({
-    crane_no,
-    content: "리스트 완료 처리"
-  });
-  // remarks 실패해도 핵심 로직은 진행
-  if (rErr) console.warn("remarks insert failed:", rErr.message);
-
   loadCranes();
   loadDashboard();
   loadScheduleDashboard();
 }
 
 /* =========================
-   크레인 등록 / 수정
+   크레인 등록 / 수정 (소형)
 ========================= */
 let editingCraneId = null;
 
 async function addCrane(category = "일반") {
   let crane_no = document.getElementById("c_no")?.value?.trim();
   if (!crane_no) return alert("크레인 번호 필수");
+
   if (/^\d+$/.test(crane_no)) crane_no = `C-${crane_no}`;
 
   const hoistType =
@@ -214,9 +218,6 @@ async function addCrane(category = "일반") {
   loadCranes();
 }
 
-/* =========================
-   수정 / 삭제 / 보류
-========================= */
 async function loadCraneToForm(id) {
   const { data } = await sb.from("cranes").select("*").eq("id", id).single();
   if (!data) return;
@@ -257,94 +258,107 @@ async function releaseCraneHold(id) {
 }
 
 /* =========================
-   메인 점검 저장 (id 기준 / 안정본)
-   ✅ date "" 오류 방지
-   ✅ v4: TC- 입력은 그대로(타워는 TC-로 입력)
-   ✅ v4: 코멘트 비었으면 자동 멘트
-   ✅ v4: i_next 8자리 입력 보정
-   ✅ v5 PATCH: comment 있으면 remarks 자동 insert (비고리스트 연동)
+   ✅ 메인 점검 저장
+   ✅ 다중번호 지원 (203,678,508)
+   ✅ 타워는 TC- 붙여서 입력 권장 (충돌 방지)
 ========================= */
 async function saveInspection() {
-  let crane_no = document.getElementById("i_crane_no")?.value?.trim();
-  if (!crane_no) return alert("크레인 번호 입력");
-
-  // ✅ 타워는 사용자가 TC- 붙여서 입력할 예정 (충돌 방지)
-  // ✅ 소형은 숫자만 입력하면 C- 자동
-  if (!/^TC-/i.test(crane_no) && /^\d+$/.test(crane_no)) {
-    crane_no = `C-${crane_no}`;
-  }
+  const raw = document.getElementById("i_crane_no")?.value || "";
+  const list = parseCraneNoList(raw);
+  if (!list.length) return alert("크레인 번호 입력");
 
   const result = document.getElementById("i_result")?.value || "완료";
 
-  // ✅ 날짜 키보드 입력 보정
   const dateEl = document.getElementById("i_next");
   if (dateEl) dateEl.value = normalizeDateValue(dateEl.value);
 
-  let comment = document.getElementById("i_comment")?.value?.trim() || null;
+  const commentRaw = (document.getElementById("i_comment")?.value || "").trim();
+  const nextInput = document.getElementById("i_next")?.value || null;
 
-  // ✅ 코멘트 자동 멘트(비었을 때만)
-  if (!comment) {
-    comment = /^TC-/i.test(crane_no)
-      ? "타워크레인 점검 (타워는 TC- 붙여서 입력)"
-      : "소형 크레인 점검 (소형은 숫자만 입력 가능)";
+  const next_due_common = (!nextInput && result === "완료") ? addMonthsISO(3) : (nextInput || null);
+
+  const ok = [];
+  const fail = [];
+
+  for (let crane_no of list) {
+    // 소형 숫자만 -> C-
+    if (!/^TC-/i.test(crane_no) && /^\d+$/.test(crane_no)) {
+      crane_no = `C-${crane_no}`;
+    }
+
+    // 코멘트 없으면 기본 멘트
+    const comment =
+      commentRaw ||
+      (/^TC-/i.test(crane_no)
+        ? "타워크레인 점검 (타워는 TC- 붙여서 입력)"
+        : "소형 크레인 점검 (소형은 숫자만 입력 가능)");
+
+    try {
+      const { data: craneRow, error: findErr } = await sb
+        .from("cranes")
+        .select("id")
+        .eq("crane_no", crane_no)
+        .single();
+
+      if (findErr || !craneRow) {
+        fail.push(`${crane_no}(번호없음)`);
+        continue;
+      }
+
+      const craneUpdate = {
+        inspection_status: result,
+        next_inspection_date: next_due_common || null
+      };
+
+      if (result === "보류") {
+        craneUpdate.hold_reason = comment || "메인 입력 보류";
+      }
+
+      const up = await sb
+        .from("cranes")
+        .update(craneUpdate)
+        .eq("id", craneRow.id);
+
+      if (up.error) {
+        fail.push(`${crane_no}(${up.error.message})`);
+        continue;
+      }
+
+      const ins = await sb.from("inspections").insert({
+        crane_no,
+        inspection_date: todayISO(),
+        result,
+        comment,
+        next_due: next_due_common || null
+      });
+
+      if (ins.error) {
+        fail.push(`${crane_no}(${ins.error.message})`);
+        continue;
+      }
+
+      ok.push(crane_no);
+    } catch (e) {
+      fail.push(`${crane_no}(unknown)`);
+    }
   }
 
-  let next_due = document.getElementById("i_next")?.value || null;
+  // 입력칸 초기화(요청했었음)
+  const noEl = document.getElementById("i_crane_no");
+  const nextEl = document.getElementById("i_next");
+  const comEl = document.getElementById("i_comment");
+  if (noEl) noEl.value = "";
+  if (nextEl) nextEl.value = "";
+  if (comEl) comEl.value = "";
 
-  if (!next_due && result === "완료") {
-    next_due = addMonthsISO(3);
-  }
-
-  const { data: craneRow, error: findErr } = await sb
-    .from("cranes")
-    .select("id")
-    .eq("crane_no", crane_no)
-    .single();
-
-  if (findErr || !craneRow) {
-    return alert(`크레인 번호 없음: ${crane_no}`);
-  }
-
-  const craneUpdate = {
-    inspection_status: result,
-    next_inspection_date: next_due || null
-  };
-
-  if (result === "보류") {
-    craneUpdate.hold_reason = comment || "메인 입력 보류";
-  }
-
-  const up = await sb
-    .from("cranes")
-    .update(craneUpdate)
-    .eq("id", craneRow.id);
-
-  if (up.error) return alert(up.error.message);
-
-  const inspectionPayload = {
-    crane_no,
-    inspection_date: todayISO(),
-    result,
-    comment,
-    next_due: next_due || null
-  };
-
-  const ins = await sb.from("inspections").insert(inspectionPayload);
-  if (ins.error) return alert(ins.error.message);
-
-  // ✅ v5 PATCH: comment가 있을 때 remarks에 자동 저장 (비고리스트 연동)
-  // - remarks 구조가 달라도 최소 crane_no/content만 넣으면 표시 가능하게
-  if (comment) {
-    const { error: rErr } = await sb.from("remarks").insert({
-      crane_no,
-      content: comment
-    });
-    if (rErr) console.warn("remarks insert failed:", rErr.message);
-  }
-
-  alert("점검 저장 완료");
   loadDashboard();
   loadScheduleDashboard();
+
+  if (fail.length) {
+    alert(`저장 완료: ${ok.length}대\n실패: ${fail.join(", ")}`);
+  } else {
+    alert(`저장 완료: ${ok.length}대`);
+  }
 }
 
 /* =========================
@@ -402,9 +416,6 @@ function clearCraneForm() {
     .forEach(id => document.getElementById(id) && (document.getElementById(id).value = ""));
 }
 
-/* =========================
-   크레인 번호 자동 C- 접두
-========================= */
 function autoCraneNoPrefix() {
   const el = document.getElementById("c_no");
   if (!el) return;
@@ -420,9 +431,7 @@ function autoCraneNoPrefix() {
 }
 
 /* =========================
-   점검 예정 대시보드
-   ✅ v4 FIX: 타워 판별 강화
-   - crane_type === "타워" 또는 crane_no가 TC-로 시작하면 타워로 취급
+   점검 예정 대시보드 (타워 판별)
 ========================= */
 function _ddayLabel(days) {
   if (days >= 0) return `D-${days}`;
@@ -459,10 +468,7 @@ async function loadScheduleDashboard() {
     .filter(c => c.inspection_status !== "완료")
     .sort((a, b) => a.dday - b.dday);
 
-  // ✅ 소형/서비스 = 타워 제외 10개
   const small = list.filter(c => !_isTowerCrane(c)).slice(0, 10);
-
-  // ✅ 타워 = 타워로 판별되는 것 5개
   const tower = list.filter(c => _isTowerCrane(c)).slice(0, 5);
 
   const cardHTML = (c) => `
@@ -510,37 +516,171 @@ async function scheduleSetHold(id) {
 }
 
 /* =========================
+   ✅ 타워크레인 리스트 (별도 페이지용)
+========================= */
+let editingTowerId = null;
+
+async function loadTowerCranes() {
+  let query = sb.from("cranes").select("*").ilike("crane_no", "TC-%");
+
+  let no = document.getElementById("f_no")?.value?.trim();
+  const area = document.getElementById("f_area")?.value;
+  const brand = document.getElementById("f_brand")?.value;
+  const ton = document.getElementById("f_ton")?.value;
+  const status = document.getElementById("f_status")?.value;
+
+  if (no) {
+    if (/^\d+$/.test(no)) no = `TC-${no}`;
+    if (!/^TC-/i.test(no)) no = `TC-${no}`;
+    query = query.ilike("crane_no", `%${no}%`);
+  }
+  if (area) query = query.eq("area", area);
+  if (brand) query = query.ilike("brand", `%${brand}%`);
+  if (ton) query = query.eq("ton", Number(ton));
+  if (status) query = query.eq("inspection_status", status);
+
+  const { data, error } = await query;
+  if (error) return alert(error.message);
+
+  const tbody = document.getElementById("towerCraneList");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  data.forEach(c => {
+    // hoist_spec에 wire/trolley를 넣어뒀으면 그대로 보여주기
+    const spec = c.hoist_spec || "";
+    const wire = spec.match(/Wire\s*Φ?\s*([0-9.]+)/i)?.[1] || "";
+    const trolley = spec.match(/Trolley\s*Φ?\s*([0-9.]+)/i)?.[1] || "";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${c.crane_no}</td>
+      <td>${c.area || ""}</td>
+      <td>${c.brand || ""}</td>
+      <td>${c.ton ?? ""}</td>
+      <td>${wire}</td>
+      <td>${trolley}</td>
+      <td>${c.inspection_status || ""}</td>
+      <td>
+        <button onclick="markCraneComplete('${c.id}','${c.crane_no}')">완료</button>
+        ${c.inspection_status === "보류"
+          ? `<button onclick="releaseCraneHold('${c.id}')">해제</button>`
+          : `<button onclick="setCraneHold('${c.id}')">보류</button>`
+        }
+        <button onclick="loadTowerToForm('${c.id}')">수정</button>
+        <button onclick="deleteTowerCrane('${c.id}')">삭제</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function addTowerCrane() {
+  let no = document.getElementById("c_no")?.value?.trim();
+  if (!no) return alert("타워 번호 필수");
+
+  if (/^\d+$/.test(no)) no = `TC-${no}`;
+  if (!/^TC-/i.test(no)) no = `TC-${no}`;
+
+  const area = document.getElementById("c_area")?.value || null;
+  const brand = document.getElementById("c_brand")?.value || null;
+  const tonRaw = document.getElementById("c_ton")?.value;
+  const ton = tonRaw ? Number(tonRaw) : null;
+
+  const wire = (document.getElementById("c_wire")?.value || "").trim();
+  const trolley = (document.getElementById("c_trolley")?.value || "").trim();
+  const specParts = [];
+  if (wire) specParts.push(`Wire Φ${wire}`);
+  if (trolley) specParts.push(`Trolley Φ${trolley}`);
+  const hoist_spec = specParts.join(" / ") || null;
+
+  const payload = {
+    crane_no: no,
+    crane_type: "타워",
+    area,
+    brand,
+    ton,
+    hoist_type: "Wire",
+    hoist_spec
+  };
+
+  const result = editingTowerId
+    ? await sb.from("cranes").update(payload).eq("id", editingTowerId)
+    : await sb.from("cranes").insert(payload);
+
+  if (result.error) return alert(result.error.message);
+
+  alert(editingTowerId ? "수정 완료" : "등록 완료");
+  editingTowerId = null;
+
+  ["c_no","c_area","c_brand","c_ton","c_wire","c_trolley"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+
+  loadTowerCranes();
+}
+
+async function loadTowerToForm(id) {
+  const { data, error } = await sb.from("cranes").select("*").eq("id", id).single();
+  if (error || !data) return;
+
+  editingTowerId = id;
+
+  document.getElementById("c_no").value = data.crane_no || "";
+  document.getElementById("c_area").value = data.area || "";
+  document.getElementById("c_brand").value = data.brand || "";
+  document.getElementById("c_ton").value = data.ton ?? "";
+
+  const spec = data.hoist_spec || "";
+  const wire = spec.match(/Wire\s*Φ?\s*([0-9.]+)/i)?.[1] || "";
+  const trolley = spec.match(/Trolley\s*Φ?\s*([0-9.]+)/i)?.[1] || "";
+
+  const wEl = document.getElementById("c_wire");
+  const tEl = document.getElementById("c_trolley");
+  if (wEl) wEl.value = wire;
+  if (tEl) tEl.value = trolley;
+}
+
+async function deleteTowerCrane(id) {
+  if (!confirm("타워크레인 삭제할까요?")) return;
+  const { error } = await sb.from("cranes").delete().eq("id", id);
+  if (error) return alert(error.message);
+  loadTowerCranes();
+}
+
+/* =========================
    페이지 이동
 ========================= */
 function openCraneList() { window.open("cranes.html", "_blank"); }
+function openTowerCraneList() { window.open("tower_cranes.html", "_blank"); }
 function openRemarkList() { window.open("remarks.html", "_blank"); }
 function openHoldList() { window.open("holds.html", "_blank"); }
-function openTowerCraneList() { window.open("tower_cranes.html", "_blank"); }
 
 /* =========================
    자동 실행
 ========================= */
 document.addEventListener("DOMContentLoaded", () => {
-  // ✅ v4: 날짜 키보드 입력 보정 이벤트(i_next)
+  // 날짜 키보드 입력 보정 이벤트(i_next)
   const iNext = document.getElementById("i_next");
   if (iNext) {
     iNext.addEventListener("input", () => {
-      const nv = normalizeDateValue(iNext.value);
       if (/^\d{8}$/.test(String(iNext.value).trim())) {
-        iNext.value = nv;
+        iNext.value = normalizeDateValue(iNext.value);
       }
     });
     iNext.addEventListener("blur", () => {
       iNext.value = normalizeDateValue(iNext.value);
-    });
-    iNext.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") iNext.value = normalizeDateValue(iNext.value);
     });
   }
 
   if (document.getElementById("f_no_mode")) applyNoModeFilterUI();
   if (document.getElementById("craneList")) loadCranes();
 
+  // 타워 페이지
+  if (document.getElementById("towerCraneList")) loadTowerCranes();
+
+  // 메인(index)
   if (document.getElementById("dashboard")) {
     loadDashboard();
     loadScheduleDashboard();
@@ -550,6 +690,8 @@ document.addEventListener("DOMContentLoaded", () => {
 /* =========================
    전역 바인딩
 ========================= */
+window.applyNoModeFilterUI = applyNoModeFilterUI;
+
 window.loadCranes = loadCranes;
 window.addCrane = addCrane;
 window.loadCraneToForm = loadCraneToForm;
@@ -557,20 +699,22 @@ window.deleteCrane = deleteCrane;
 window.setCraneHold = setCraneHold;
 window.releaseCraneHold = releaseCraneHold;
 
+window.markCraneComplete = markCraneComplete;
+
 window.saveInspection = saveInspection;
 window.resetInspectionStatus = resetInspectionStatus;
 
 window.toggleHoistDetail = toggleHoistDetail;
 window.autoCraneNoPrefix = autoCraneNoPrefix;
 
-window.applyNoModeFilterUI = applyNoModeFilterUI;
-
-// ✅ v4 추가 바인딩(리스트 완료)
-window.markCraneComplete = markCraneComplete;
-
 window.loadScheduleDashboard = loadScheduleDashboard;
 window.scheduleSetComplete = scheduleSetComplete;
 window.scheduleSetHold = scheduleSetHold;
+
+window.loadTowerCranes = loadTowerCranes;
+window.addTowerCrane = addTowerCrane;
+window.loadTowerToForm = loadTowerToForm;
+window.deleteTowerCrane = deleteTowerCrane;
 
 window.openCraneList = openCraneList;
 window.openTowerCraneList = openTowerCraneList;
