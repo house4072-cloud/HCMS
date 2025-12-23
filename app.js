@@ -143,6 +143,15 @@ async function markCraneComplete(id, crane_no) {
 
   if (ins.error) return alert(ins.error.message);
 
+  // ✅ v5 PATCH: comment가 있으면 remarks에도 자동 insert (비고리스트 연동)
+  // (remarks 컬럼 구조가 달라도 최소 crane_no/content만 넣으면 동작하도록)
+  const { error: rErr } = await sb.from("remarks").insert({
+    crane_no,
+    content: "리스트 완료 처리"
+  });
+  // remarks 실패해도 핵심 로직은 진행
+  if (rErr) console.warn("remarks insert failed:", rErr.message);
+
   loadCranes();
   loadDashboard();
   loadScheduleDashboard();
@@ -253,6 +262,7 @@ async function releaseCraneHold(id) {
    ✅ v4: TC- 입력은 그대로(타워는 TC-로 입력)
    ✅ v4: 코멘트 비었으면 자동 멘트
    ✅ v4: i_next 8자리 입력 보정
+   ✅ v5 PATCH: comment 있으면 remarks 자동 insert (비고리스트 연동)
 ========================= */
 async function saveInspection() {
   let crane_no = document.getElementById("i_crane_no")?.value?.trim();
@@ -321,6 +331,16 @@ async function saveInspection() {
 
   const ins = await sb.from("inspections").insert(inspectionPayload);
   if (ins.error) return alert(ins.error.message);
+
+  // ✅ v5 PATCH: comment가 있을 때 remarks에 자동 저장 (비고리스트 연동)
+  // - remarks 구조가 달라도 최소 crane_no/content만 넣으면 표시 가능하게
+  if (comment) {
+    const { error: rErr } = await sb.from("remarks").insert({
+      crane_no,
+      content: comment
+    });
+    if (rErr) console.warn("remarks insert failed:", rErr.message);
+  }
 
   alert("점검 저장 완료");
   loadDashboard();
@@ -506,7 +526,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (iNext) {
     iNext.addEventListener("input", () => {
       const nv = normalizeDateValue(iNext.value);
-      // type=date 환경에서는 중간 입력 간섭될 수 있어, 8자리 완성 시에만 적용
       if (/^\d{8}$/.test(String(iNext.value).trim())) {
         iNext.value = nv;
       }
