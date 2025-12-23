@@ -2,66 +2,74 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HCMS | 비고 리스트</title>
 
-  <!-- 공용 CSS -->
+  <!-- 공통 CSS -->
   <link rel="stylesheet" href="assets/hcms.css">
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     body {
-      font-family: Arial, sans-serif;
+      margin: 0;
       padding: 24px;
-      background: var(--bg);
-      color: var(--text);
+      background: #f2f2f2;
+      font-family: Arial, sans-serif;
+      font-size: 17px;
+      color: #222;
     }
 
     h1 {
       margin-bottom: 20px;
     }
 
-    /* ===== 필터 ===== */
     .filter-box {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
-    .filter-box input,
-    .filter-box select,
-    .filter-box button {
-      height: 52px;
-      font-size: 17px;
-      padding: 0 12px;
+    input, select, button {
+      height: 48px;
+      font-size: 16px;
+      padding: 0 10px;
     }
 
     button {
-      font-weight: bold;
       cursor: pointer;
+      font-weight: bold;
     }
 
-    /* ===== 테이블 ===== */
     table {
       width: 100%;
       border-collapse: collapse;
-      background: var(--panel);
+      background: #fff;
     }
 
     th, td {
-      border: 1px solid var(--line);
+      border: 1px solid #ccc;
       padding: 14px;
       text-align: center;
-      vertical-align: top;
+      vertical-align: middle;
     }
 
     th {
-      background: #e9edf2;
+      background: #e6e6e6;
     }
 
     td.remark {
       text-align: left;
-      min-width: 520px;   /* 🔥 비고 크게 */
-      white-space: pre-wrap;
+      min-width: 420px;
+      line-height: 1.6;
+    }
+
+    .btn-mini {
+      height: 36px;
+      font-size: 14px;
+      margin: 2px;
     }
   </style>
 </head>
@@ -73,13 +81,6 @@
 <!-- ===== 필터 ===== -->
 <div class="filter-box">
   <input id="f_no" placeholder="크레인 번호" />
-
-  <select id="f_area">
-    <option value="">지역 전체</option>
-    <option value="A">A</option>
-    <option value="B">B</option>
-  </select>
-
   <select id="f_type">
     <option value="">크레인 타입 전체</option>
     <option value="EOT">EOT</option>
@@ -89,55 +90,64 @@
     <option value="Wall">Wall</option>
     <option value="Monorail">Monorail</option>
     <option value="Service Crane">Service Crane</option>
-    <option value="타워">Tower</option>
+    <option value="타워">타워</option>
   </select>
-
+  <select id="f_area">
+    <option value="">지역 전체</option>
+    <option value="A">A</option>
+    <option value="B">B</option>
+  </select>
   <button onclick="loadRemarks()">필터 적용</button>
 </div>
 
-<!-- ===== 리스트 ===== -->
+<!-- ===== 테이블 ===== -->
 <table>
   <thead>
     <tr>
-      <th>크레인 번호</th>
+      <th>번호</th>
       <th>타입</th>
       <th>지역</th>
       <th>위치</th>
       <th>비고</th>
       <th>작성일</th>
+      <th>관리</th>
     </tr>
   </thead>
   <tbody id="remarkList"></tbody>
 </table>
 
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- App -->
-<script src="app.js"></script>
-
 <script>
+/* =========================
+   Supabase 초기화
+========================= */
+const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co";
+const SUPABASE_ANON_KEY = "<<<너가 쓰는 키 그대로 유지>>>";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* =========================
+   비고 로드 (400 오류 해결 버전)
+========================= */
 async function loadRemarks() {
   let query = sb
     .from("remarks")
     .select(`
+      id,
       crane_no,
+      crane_type,
+      area,
+      location,
       content,
-      created_at,
-      cranes (
-        crane_type,
-        area,
-        location
-      )
+      remark_date
     `)
-    .order("created_at", { ascending: false });
+    .order("remark_date", { ascending: false });
 
-  const no = document.getElementById("f_no")?.value?.trim();
-  const area = document.getElementById("f_area")?.value;
-  const type = document.getElementById("f_type")?.value;
+  const no = document.getElementById("f_no").value.trim();
+  const type = document.getElementById("f_type").value;
+  const area = document.getElementById("f_area").value;
 
   if (no) query = query.ilike("crane_no", `%${no}%`);
-  if (area) query = query.eq("cranes.area", area);
-  if (type) query = query.eq("cranes.crane_type", type);
+  if (type) query = query.eq("crane_type", type);
+  if (area) query = query.eq("area", area);
 
   const { data, error } = await query;
   if (error) {
@@ -149,20 +159,71 @@ async function loadRemarks() {
   tbody.innerHTML = "";
 
   data.forEach(r => {
-    const c = r.cranes || {};
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${r.crane_no || ""}</td>
-      <td>${c.crane_type || ""}</td>
-      <td>${c.area || ""}</td>
-      <td>${c.location || ""}</td>
-      <td class="remark">${r.content || ""}</td>
-      <td>${r.created_at ? r.created_at.slice(0,10) : ""}</td>
+      <td>${r.crane_no}</td>
+      <td>${r.crane_type || ""}</td>
+      <td>${r.area || ""}</td>
+      <td>${r.location || ""}</td>
+      <td class="remark">${r.content}</td>
+      <td>${r.remark_date || ""}</td>
+      <td>
+        <button class="btn-mini" onclick="editRemark('${r.id}', '${r.content.replace(/'/g,"&#39;")}', '${r.remark_date || ""}')">수정</button>
+        <button class="btn-mini" onclick="deleteRemark('${r.id}')">삭제</button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
 }
 
+/* =========================
+   비고 수정
+========================= */
+async function editRemark(id, oldContent, oldDate) {
+  const content = prompt("비고 수정", oldContent);
+  if (!content) return;
+
+  const remark_date = prompt("날짜 (YYYY-MM-DD)", oldDate);
+  if (!remark_date) return;
+
+  const { error } = await sb
+    .from("remarks")
+    .update({
+      content,
+      remark_date
+    })
+    .eq("id", id);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  loadRemarks();
+}
+
+/* =========================
+   비고 삭제
+========================= */
+async function deleteRemark(id) {
+  if (!confirm("비고를 삭제할까요?")) return;
+
+  const { error } = await sb
+    .from("remarks")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  loadRemarks();
+}
+
+/* =========================
+   초기 로드
+========================= */
 document.addEventListener("DOMContentLoaded", loadRemarks);
 </script>
 
