@@ -84,11 +84,11 @@ h1, h2, h3{ margin: 0 0 14px 0; }
 h1{ font-size: 28px; }
 h2{ font-size: 24px; }
 h3{ font-size: 20px; }
+
 .muted{ color: var(--muted); }
 
 /* ===== 입력/셀렉트 ===== */
 .input, input, select, textarea{
-  height: 52px;
   font-size: 18px;
   padding: 0 14px;
 
@@ -99,10 +99,15 @@ h3{ font-size: 20px; }
   outline: none;
 }
 
-textarea{
-  height: auto;              /* textarea는 높이 고정 안함 */
+.input, input, select{
+  height: 52px;
+}
+
+textarea.input, textarea{
+  height: auto;
   padding: 12px 14px;
   line-height: 1.35;
+  resize: vertical;
 }
 
 .input:focus, input:focus, select:focus, textarea:focus{
@@ -110,71 +115,40 @@ textarea{
   box-shadow: 0 0 0 3px rgba(255,138,0,.18);
 }
 
-/* =========================
-   ✅ 버튼(중요): 메인에서 색 안 먹는 문제 해결
-   - button / .btn / a.btn 모두 동일 처리
-   - 다른 CSS가 덮어써도 이게 우선되게 작성
-========================= */
-.btn,
-button,
-a.btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-
+/* ===== 버튼 (색 안 나오는 문제 강제 해결) ===== */
+.btn, button, input[type="button"], input[type="submit"]{
   height: 52px;
   padding: 0 22px;
   font-size: 18px;
   font-weight: 800;
-  border-radius: 12px;
 
-  border: 0;
-  cursor: pointer;
+  border: 0 !important;
+  border-radius: 12px !important;
+  cursor: pointer !important;
 
-  background: var(--brand) !important;
+  background-color: var(--brand) !important;
   color: #000 !important;
 
-  text-decoration: none;
-  user-select: none;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
-.btn:hover,
-button:hover,
-a.btn:hover{
-  background: var(--brand-2) !important;
-  filter: none;
+.btn:hover, button:hover, input[type="button"]:hover, input[type="submit"]:hover{
+  filter: brightness(.98);
 }
-
-.btn:active,
-button:active,
-a.btn:active{
+.btn:active, button:active, input[type="button"]:active, input[type="submit"]:active{
   transform: translateY(1px);
 }
 
-/* 경고 버튼 */
-.btn.warn,
-button.warn,
-a.btn.warn{
-  background: var(--danger) !important;
+.btn.warn, button.warn{
+  background-color: var(--danger) !important;
   color: #fff !important;
 }
 
-/* 고스트 버튼(테두리) */
-.btn.ghost,
-button.ghost,
-a.btn.ghost{
-  background: transparent !important;
+.btn.ghost, button.ghost{
+  background-color: transparent !important;
   border: 1px solid var(--line) !important;
   color: var(--text) !important;
-}
-
-/* 비활성 */
-.btn:disabled,
-button:disabled,
-a.btn:disabled{
-  opacity: .55;
-  cursor: not-allowed;
-  transform:none;
 }
 
 /* ===== 폼 그리드 ===== */
@@ -212,7 +186,7 @@ a.btn:disabled{
   margin-top: 8px;
   font-size: 36px;
   font-weight: 900;
-  color: var(--brand);
+  color: var(--brand) !important; /* ✅ 숫자 색 강제 */
 }
 
 /* ===== 테이블 ===== */
