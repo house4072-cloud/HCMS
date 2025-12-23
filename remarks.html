@@ -5,11 +5,9 @@
   <title>HCMS | 비고 리스트</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- 공용 CSS -->
   <link rel="stylesheet" href="assets/hcms.css">
 
   <style>
-    /* ===== 공통 톤 (밝은 회색 기준) ===== */
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -26,9 +24,7 @@
       justify-content: space-between;
     }
 
-    .topbar img {
-      height: 42px;
-    }
+    .topbar img { height: 42px; }
 
     .topbar .title {
       font-size: 26px;
@@ -36,7 +32,6 @@
       color: #000;
     }
 
-    /* ===== 레이아웃 ===== */
     .container {
       max-width: 1600px;
       margin: auto;
@@ -44,17 +39,14 @@
     }
 
     .card {
-      background: #ffffff;
+      background: #fff;
       border-radius: 14px;
       padding: 24px;
       margin-bottom: 24px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
 
-    h2 {
-      margin: 0 0 18px 0;
-      font-size: 24px;
-    }
+    h2 { margin: 0 0 18px 0; }
 
     /* ===== 필터 ===== */
     .filter-grid {
@@ -64,19 +56,18 @@
       margin-bottom: 16px;
     }
 
-    select, input {
+    input, select {
       height: 52px;
       font-size: 16px;
       padding: 0 12px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      box-sizing: border-box;
     }
 
     .btn {
       height: 52px;
-      padding: 0 24px;
-      font-size: 16px;
+      padding: 0 20px;
+      font-size: 15px;
       font-weight: bold;
       border-radius: 8px;
       border: none;
@@ -85,7 +76,11 @@
       color: #000;
     }
 
-    /* ===== 테이블 ===== */
+    .btn.danger {
+      background: #ff4444;
+      color: #fff;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -99,58 +94,41 @@
       vertical-align: middle;
     }
 
-    th {
-      background: #f0f0f0;
-      font-weight: bold;
-    }
+    th { background: #f0f0f0; }
 
     td.remark {
       text-align: left;
-      min-width: 400px;
+      min-width: 380px;
       white-space: pre-wrap;
       line-height: 1.5;
     }
 
-    tr:nth-child(even) {
-      background: #fafafa;
-    }
-
-    /* ===== 반응형 ===== */
-    @media (max-width: 900px) {
-      .filter-grid {
-        grid-template-columns: 1fr;
-      }
-
-      td.remark {
-        min-width: auto;
-      }
-    }
+    tr:nth-child(even) { background: #fafafa; }
   </style>
 </head>
 
 <body>
 
-<!-- ===== 상단 ===== -->
 <header class="topbar">
-  <img src="assets/hope.png" alt="희망이엔지">
+  <img src="assets/hope.png">
   <div class="title">비고 리스트</div>
-  <img src="assets/hanwha.png" alt="한화에너지">
+  <img src="assets/hanwha.png">
 </header>
 
 <main class="container">
 
-  <!-- ===== 필터 ===== -->
+  <!-- 필터 -->
   <section class="card">
     <h2>필터</h2>
     <div class="filter-grid">
-      <input id="f_no" placeholder="크레인 번호 (예: C-014 / TC-01)" />
+      <input id="f_no" placeholder="크레인 번호">
       <select id="f_area">
         <option value="">지역 전체</option>
         <option value="A">A</option>
         <option value="B">B</option>
       </select>
       <select id="f_type">
-        <option value="">크레인 타입 전체</option>
+        <option value="">타입 전체</option>
         <option value="EOT">EOT</option>
         <option value="Suspension">Suspension</option>
         <option value="Gantry">Gantry</option>
@@ -164,17 +142,18 @@
     </div>
   </section>
 
-  <!-- ===== 리스트 ===== -->
+  <!-- 리스트 -->
   <section class="card">
     <h2>비고 목록</h2>
     <table>
       <thead>
         <tr>
-          <th>크레인 번호</th>
+          <th>번호</th>
           <th>타입</th>
           <th>지역</th>
           <th>비고</th>
           <th>작성일</th>
+          <th>관리</th>
         </tr>
       </thead>
       <tbody id="remarkList"></tbody>
@@ -183,56 +162,38 @@
 
 </main>
 
-<!-- ===== Supabase ===== -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-/* =========================
-   Supabase 초기화
-========================= */
 const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA";
+const SUPABASE_ANON_KEY = "YOUR_ANON_KEY_HERE";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* =========================
-   비고 리스트 로드 (관계 JOIN ❌)
-========================= */
-async function loadRemarks() {
-  const no = document.getElementById("f_no").value.trim();
-  const area = document.getElementById("f_area").value;
-  const type = document.getElementById("f_type").value;
+async function loadRemarks() {eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA
+  const no = f_no.value.trim();
+  const area = f_area.value;
+  const type = f_type.value;
 
-  // 1️⃣ remarks 단독 조회
   const { data: remarks, error } = await sb
     .from("remarks")
     .select("id, crane_no, content, created_at")
     .order("created_at", { ascending: false });
 
-  if (error) {
-    alert(error.message);
-    return;
-  }
+  if (error) return alert(error.message);
 
-  // 2️⃣ 크레인 정보 조회
   const craneNos = [...new Set(remarks.map(r => r.crane_no))];
-
   const { data: cranes } = await sb
     .from("cranes")
     .select("crane_no, crane_type, area")
     .in("crane_no", craneNos);
 
   const craneMap = {};
-  (cranes || []).forEach(c => {
-    craneMap[c.crane_no] = c;
-  });
+  (cranes || []).forEach(c => craneMap[c.crane_no] = c);
 
-  // 3️⃣ 필터 + 출력
-  const tbody = document.getElementById("remarkList");
-  tbody.innerHTML = "";
+  remarkList.innerHTML = "";
 
   remarks.forEach(r => {
     const c = craneMap[r.crane_no] || {};
-
     if (no && !r.crane_no.includes(no)) return;
     if (area && c.area !== area) return;
     if (type && c.crane_type !== type) return;
@@ -243,15 +204,41 @@ async function loadRemarks() {
       <td>${c.crane_type || ""}</td>
       <td>${c.area || ""}</td>
       <td class="remark">${r.content}</td>
-      <td>${r.created_at?.slice(0,10) || ""}</td>
+      <td>${r.created_at?.slice(0,10)}</td>
+      <td>
+        <button class="btn" onclick="editRemark('${r.id}','${r.content.replace(/'/g,"&#39;")}')">수정</button>
+        <button class="btn danger" onclick="deleteRemark('${r.id}')">삭제</button>
+      </td>
     `;
-    tbody.appendChild(tr);
+    remarkList.appendChild(tr);
   });
 }
 
-/* =========================
-   초기 로드
-========================= */
+async function editRemark(id, oldText) {
+  const content = prompt("비고 수정", oldText);
+  if (!content) return;
+
+  const { error } = await sb
+    .from("remarks")
+    .update({ content })
+    .eq("id", id);
+
+  if (error) return alert(error.message);
+  loadRemarks();
+}
+
+async function deleteRemark(id) {
+  if (!confirm("정말 삭제하시겠습니까?")) return;
+
+  const { error } = await sb
+    .from("remarks")
+    .delete()
+    .eq("id", id);
+
+  if (error) return alert(error.message);
+  loadRemarks();
+}
+
 document.addEventListener("DOMContentLoaded", loadRemarks);
 </script>
 
