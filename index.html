@@ -12,11 +12,11 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #0e0e11;
-      color: #fff;
+      background: #e9ecef; /* ✅ 회색톤 */
+      color: #111;
     }
 
-    /* ===== TOPBAR (PC / 모바일 공통 안정 구조) ===== */
+    /* ===== TOPBAR (PC/모바일 공통) ===== */
     .topbar {
       position: relative;
       background: #ff8a00;
@@ -25,12 +25,7 @@
       align-items: center;
       justify-content: space-between;
     }
-
-    .topbar img {
-      height: 56px;   /* 🔥 로고 크기 키움 */
-      object-fit: contain;
-    }
-
+    .topbar img { height: 56px; object-fit: contain; }
     .topbar .title {
       position: absolute;
       left: 50%;
@@ -49,16 +44,19 @@
     }
 
     .card {
-      background: #1a1a22;
+      background: #f8f9fa;          /* ✅ 밝은 회색 카드 */
+      border: 1px solid #d0d4d9;
       border-radius: 16px;
       padding: 28px;
       margin-bottom: 28px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.08);
     }
 
     h2 {
       margin-top: 0;
       margin-bottom: 24px;
       font-size: 28px;
+      color: #111;
     }
 
     /* ===== 대시보드 ===== */
@@ -69,11 +67,13 @@
     }
 
     .dash-item {
-      background: #111;
+      background: #ffffff;
+      border: 1px solid #d0d4d9;
       border-radius: 14px;
       padding: 24px;
       text-align: center;
-      font-size: 22px;
+      font-size: 20px;
+      color: #111;
     }
 
     .dash-item span {
@@ -89,29 +89,39 @@
       display: grid;
       grid-template-columns: 180px 1fr;
       gap: 20px 18px;
-      align-items: center;
+      align-items: start;
       margin-bottom: 28px;
     }
 
-    label {
-      font-size: 20px;
-    }
+    label { font-size: 20px; color:#111; }
 
     .input {
       height: 60px;
       font-size: 20px;
       padding: 0 16px;
       border-radius: 10px;
-      border: none;
+      border: 1px solid #cfd4da;
+      background: #fff;
+      color: #111;
+      box-sizing: border-box;
+    }
+
+    /* ✅ 비고 입력칸(엔터 가능) */
+    textarea.input {
+      height: 140px;          /* 🔥 크게 */
+      padding: 14px 16px;
+      resize: vertical;
+      line-height: 1.4;
+    }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #555;
     }
 
     /* ===== 버튼 ===== */
-    .btn-row {
-      display: flex;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-
+    .btn-row { display: flex; gap: 24px; flex-wrap: wrap; }
     .btn {
       height: 68px;
       padding: 0 36px;
@@ -123,29 +133,14 @@
       background: #ff8a00;
       color: #000;
     }
-
-    .btn.warn {
-      background: #ff4444;
-      color: #fff;
-    }
+    .btn.warn { background: #ff4444; color: #fff; }
 
     /* ===== 반응형 ===== */
     @media (max-width: 900px) {
-      .dash {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .topbar img {
-        height: 44px;
-      }
-
-      .topbar .title {
-        font-size: 26px;
-      }
+      .dash { grid-template-columns: repeat(2, 1fr); }
+      .form-grid { grid-template-columns: 1fr; }
+      .topbar img { height: 44px; }
+      .topbar .title { font-size: 26px; }
     }
   </style>
 </head>
@@ -178,7 +173,10 @@
 
     <div class="form-grid">
       <label>크레인 번호</label>
-      <input id="i_crane_no" class="input" placeholder="예: C-014" />
+      <div>
+        <input id="i_crane_no" class="input" placeholder="소형: 숫자만 입력 가능 (예: 14) / 타워: TC-붙여서 입력 (예: TC-014)" />
+        <div class="hint">※ 소형은 숫자만 치면 C- 자동 / 타워는 충돌방지로 TC- 붙여서 입력</div>
+      </div>
 
       <label>결과</label>
       <select id="i_result" class="input">
@@ -187,11 +185,15 @@
         <option value="미완">미완</option>
       </select>
 
-      <label>점검 완료일</label>
+      <label>다음 점검일</label>
       <input id="i_next" class="input" type="date" />
 
-      <label>코멘트</label>
-      <input id="i_comment" class="input" placeholder="메모" />
+      <!-- ✅ 코멘트 → 비고 -->
+      <label>비고 입력</label>
+      <div>
+        <textarea id="i_comment" class="input" placeholder="비고 입력 (엔터 가능)&#10;예) MC 교체 필요&#10;예) 차단기 불량"></textarea>
+        <div class="hint">※ 여기 입력한 비고는 저장 시 비고리스트(remarks)에 같이 저장됨</div>
+      </div>
     </div>
 
     <div class="btn-row">
@@ -199,37 +201,30 @@
       <button class="btn warn" onclick="resetInspectionStatus()">분기 리셋</button>
     </div>
   </section>
-<!-- 점검 예정 대시보드 -->
-<section class="card" id="schedule-dashboard">
-  <h2>점검 예정</h2>
 
-  <div class="schedule-wrap">
+  <!-- 점검 예정 대시보드 -->
+  <section class="card" id="schedule-dashboard">
+    <h2>점검 예정</h2>
 
-    <!-- 소형 크레인 -->
-    <div class="schedule-box">
-      <h3>소형 / 서비스 크레인</h3>
-      <div class="schedule-list" id="schedule-small">
-        <!-- JS로 카드 삽입 -->
+    <div class="schedule-wrap">
+      <div class="schedule-box">
+        <h3>소형 / 서비스 크레인</h3>
+        <div class="schedule-list" id="schedule-small"></div>
+      </div>
+
+      <div class="schedule-box">
+        <h3>타워 크레인</h3>
+        <div class="schedule-list" id="schedule-tower"></div>
       </div>
     </div>
-
-    <!-- 타워 크레인 -->
-    <div class="schedule-box">
-      <h3>타워 크레인</h3>
-      <div class="schedule-list" id="schedule-tower">
-        <!-- JS로 카드 삽입 -->
-      </div>
-    </div>
-
-  </div>
-</section>
+  </section>
 
   <!-- 메뉴 -->
   <section class="card">
     <h2>리스트</h2>
     <div class="btn-row">
       <button class="btn" onclick="openCraneList()">소형크레인 리스트</button>
-      <button class="btn" onclick="openTowerCraneList()">타워크레인 리스트</button>
+      <button class="btn" onclick="openTowerCraneList()">타워크레인</button>
       <button class="btn" onclick="openRemarkList()">비고 리스트</button>
       <button class="btn" onclick="openHoldList()">보류 리스트</button>
     </div>
