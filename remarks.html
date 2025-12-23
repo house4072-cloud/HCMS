@@ -1,31 +1,100 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <link rel="stylesheet" href="assets/hcms.css">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HCMS | 비고 리스트</title>
+
+  <!-- 공용 CSS -->
+  <link rel="stylesheet" href="assets/hcms.css">
+
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js" type="module"></script>
+  <script src="app.js"></script>
 
   <style>
-    body { font-family: Arial; padding: 20px; font-size: 17px; }
-    h1 { margin-bottom: 20px; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: Arial, sans-serif;
+      background: #e5e6ea; /* 🔥 회색톤 */
+      color: #222;
+    }
 
+    h1 {
+      margin-bottom: 20px;
+      font-size: 26px;
+    }
+
+    /* ===== 테이블 ===== */
     table {
       width: 100%;
       border-collapse: collapse;
+      background: #f7f7f9;
     }
 
-    th, td {
-      border: 1px solid #ccc;
+    th {
+      background: #d9dbe1;
       padding: 14px;
-      text-align: center;
+      font-size: 16px;
+      border: 1px solid #c9cbd3;
     }
 
-    tr { height: 50px; }
-    th { background: #f4f4f4; }
+    td {
+      padding: 14px;
+      border: 1px solid #d0d2da;
+      vertical-align: top;
+      font-size: 16px;
+    }
+
+    tr:nth-child(even) {
+      background: #f0f1f5;
+    }
+
+    /* ===== 컬럼 폭 ===== */
+    th.col-no, td.col-no { width: 10%; }
+    th.col-type, td.col-type { width: 15%; }
+    th.col-area, td.col-area { width: 8%; }
+    th.col-loc, td.col-loc { width: 12%; }
+    th.col-remark, td.col-remark { width: 45%; }
+
+    /* ===== 비고 ===== */
+    .remark-box {
+      white-space: pre-wrap;
+      text-align: left;
+      line-height: 1.5;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+      padding: 12px;
+      font-size: 15px;
+      border-radius: 6px;
+      border: 1px solid #bbb;
+      box-sizing: border-box;
+    }
+
+    .btn {
+      margin-top: 8px;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #ff8a00;
+      color: #000;
+    }
+
+    .btn.gray {
+      background: #999;
+      color: #fff;
+    }
   </style>
 </head>
+
 <body>
 
 <h1>비고 리스트</h1>
@@ -33,36 +102,70 @@
 <table>
   <thead>
     <tr>
-      <th>크레인 번호</th>
-      <th>비고 내용</th>
-      <th>작성일</th>
-      <th>해결 여부</th>
+      <th class="col-no">번호</th>
+      <th class="col-type">크레인 타입</th>
+      <th class="col-area">지역</th>
+      <th class="col-loc">위치</th>
+      <th class="col-remark">비고</th>
     </tr>
   </thead>
   <tbody id="remarkList"></tbody>
 </table>
 
-<script type="module">
+<script>
   document.addEventListener("DOMContentLoaded", async () => {
     const { data, error } = await sb
       .from("remarks")
-      .select("*")
-      .order("created_at", { ascending: false });
+      .select("id, crane_no, crane_type, area, location, content")
+      .order("id", { ascending: false });
 
     if (error) return alert(error.message);
 
     const tbody = document.getElementById("remarkList");
+    tbody.innerHTML = "";
+
     data.forEach(r => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${r.crane_no}</td>
-        <td>${r.content}</td>
-        <td>${r.created_at?.slice(0,10)}</td>
-        <td>${r.resolved ? "해결" : "미해결"}</td>
+        <td class="col-no">${r.crane_no || "번호없음"}</td>
+        <td class="col-type">${r.crane_type || ""}</td>
+        <td class="col-area">${r.area || ""}</td>
+        <td class="col-loc">${r.location || ""}</td>
+        <td class="col-remark">
+          <div class="remark-box" id="view-${r.id}">
+            ${r.content || ""}
+          </div>
+          <textarea id="edit-${r.id}" style="display:none;">${r.content || ""}</textarea>
+          <br>
+          <button class="btn" onclick="editRemark('${r.id}')">수정</button>
+          <button class="btn gray" onclick="saveRemark('${r.id}')" style="display:none;" id="save-${r.id}">저장</button>
+        </td>
       `;
       tbody.appendChild(tr);
     });
   });
+
+  function editRemark(id) {
+    document.getElementById(`view-${id}`).style.display = "none";
+    document.getElementById(`edit-${id}`).style.display = "block";
+    document.getElementById(`save-${id}`).style.display = "inline-block";
+  }
+
+  async function saveRemark(id) {
+    const content = document.getElementById(`edit-${id}`).value;
+
+    const { error } = await sb
+      .from("remarks")
+      .update({ content })
+      .eq("id", id);
+
+    if (error) return alert(error.message);
+
+    document.getElementById(`view-${id}`).innerText = content;
+    document.getElementById(`view-${id}`).style.display = "block";
+    document.getElementById(`edit-${id}`).style.display = "none";
+    document.getElementById(`save-${id}`).style.display = "none";
+  }
 </script>
 
 </body>
