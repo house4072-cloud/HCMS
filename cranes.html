@@ -3,270 +3,182 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>HCMS | 크레인 리스트</title>
-
+  <title>HCMS | 소형크레인 리스트</title>
   <link rel="stylesheet" href="assets/hcms.css">
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 24px;
-      font-size: 18px;
-    }
-
-    h1 { margin-bottom: 18px; }
-
-    .filter-box, .add-box {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    input, select, button {
-      height: 56px;
-      font-size: 18px;
-      padding: 0 12px;
-      box-sizing: border-box;
-    }
-
-    button {
-      cursor: pointer;
-      font-weight: bold;
-      white-space: nowrap;
-    }
-
-    .row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin: 10px 0 18px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 12px;
-      text-align: center;
-      vertical-align: middle;
-    }
-
-    tr { height: 52px; }
-
-    th {
-      background: #f4f4f4;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-
-    .btn-mini {
-      height: 44px;
-      font-size: 16px;
-      padding: 0 10px;
-      margin: 2px 2px;
-    }
-
-    .muted {
-      color: #777;
-      font-size: 15px;
-      margin-top: 4px;
-    }
-  </style>
 </head>
 
 <body>
-  <h1>크레인 리스트</h1>
 
-  <!-- 필터 -->
-  <div class="filter-box">
-    <!-- ✅ 번호구분 필터(오류 원인: 함수 없었음 → 하단에 추가함) -->
-    <select id="f_no_mode" onchange="applyNoModeFilterUI()">
-      <option value="">번호구분 전체</option>
-      <option value="input">번호입력</option>
-      <option value="none">번호없음</option>
-    </select>
+<header class="topbar">
+  <img src="assets/hope.png" alt="희망이엔지">
+  <div class="title">소형크레인 리스트</div>
+  <img src="assets/hanwha.png" alt="한화에너지">
+</header>
 
-    <input id="f_no" placeholder="크레인 번호 (예: C-014)" />
+<main class="container">
 
-    <!-- ✅ A/B 선택 -->
-    <select id="f_area">
-      <option value="">지역 전체</option>
-      <option value="A">A</option>
-      <option value="B">B</option>
-    </select>
+  <section class="card">
+    <h2>필터</h2>
 
-    <!-- ✅ 타입 선택식(필터) -->
-    <select id="f_type">
-      <option value="">타입 전체</option>
-      <option value="EOT">EOT</option>
-      <option value="Suspension">Suspension</option>
-      <option value="Gantry">Gantry</option>
-      <option value="Post">Post</option>
-      <option value="Wall">Wall</option>
-      <option value="Monorail">Monorail</option>
-      <option value="Service Crane">Service Crane</option>
-    </select>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:14px;">
+      <select id="f_no_mode" class="input" onchange="applyNoModeFilterUI()">
+        <option value="">번호구분 전체</option>
+        <option value="input">번호입력</option>
+        <option value="none">번호없음</option>
+      </select>
 
-    <input id="f_brand" placeholder="브랜드" />
-    <input id="f_ton" placeholder="톤수" />
+      <input id="f_no" class="input" placeholder="크레인 번호 (예: C-014)" />
 
-    <select id="f_status">
-      <option value="">상태 전체</option>
-      <option value="완료">완료</option>
-      <option value="보류">보류</option>
-      <option value="미완">미완</option>
-      <option value="미점검">미점검</option>
-    </select>
-  </div>
+      <select id="f_area" class="input">
+        <option value="">지역 전체</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+      </select>
 
-  <div class="row">
-    <button onclick="loadCranes()">필터 적용</button>
-  </div>
+      <select id="f_type" class="input">
+        <option value="">타입 전체</option>
+        <option value="EOT">EOT</option>
+        <option value="Suspension">Suspension</option>
+        <option value="Gantry">Gantry</option>
+        <option value="Post">Post</option>
+        <option value="Wall">Wall</option>
+        <option value="Monorail">Monorail</option>
+        <option value="Service Crane">Service Crane</option>
+      </select>
 
-  <hr />
+      <input id="f_brand" class="input" placeholder="브랜드" />
+      <input id="f_ton" class="input" placeholder="톤수" />
 
-  <!-- 크레인 등록 -->
-  <h3>크레인 등록</h3>
+      <select id="f_status" class="input">
+        <option value="">상태 전체</option>
+        <option value="완료">완료</option>
+        <option value="보류">보류</option>
+        <option value="미완">미완</option>
+        <option value="미점검">미점검</option>
+      </select>
+    </div>
 
-  <!-- ✅ 번호입력/번호없음 선택 -->
-  <div class="row">
-    <select id="c_no_mode" onchange="setNoMode()" style="min-width: 200px;">
-      <option value="input">번호입력</option>
-      <option value="none">번호없음</option>
-    </select>
+    <button class="btn" onclick="loadCranes()">필터 적용</button>
 
-    <div class="muted">번호입력: 숫자만 치면 C- 자동 / 번호없음: 자동으로 “번호없음” 저장</div>
-  </div>
-
-  <div class="add-box">
-    <!-- 번호 -->
-    <input id="c_no" placeholder="크레인 번호 (숫자만 입력 가능)" onblur="autoCraneNoPrefix()" />
-
-    <!-- ✅ A/B 선택 -->
-    <select id="c_area">
-      <option value="">지역 선택</option>
-      <option value="A">A</option>
-      <option value="B">B</option>
-    </select>
-
-    <!-- ✅ 타입 선택식(등록) -->
-    <select id="c_type">
-      <option value="">크레인 타입 선택</option>
-      <option value="EOT">EOT</option>
-      <option value="Suspension">Suspension</option>
-      <option value="Gantry">Gantry</option>
-      <option value="Post">Post</option>
-      <option value="Wall">Wall</option>
-      <option value="Monorail">Monorail</option>
-      <option value="Service Crane">Service Crane</option>
-    </select>
-
-    <input id="c_brand" placeholder="브랜드" />
-    <input id="c_ton" placeholder="톤수" />
-    <input id="c_group" placeholder="그룹" />
-  </div>
-
-  <!-- 호이스트 (상세) -->
-  <div class="add-box" style="grid-template-columns: repeat(6, 1fr);">
-    <select id="c_hoist_type" onchange="toggleHoistDetail()">
-      <option value="">호이스트 타입</option>
-      <option value="Wire">Wire</option>
-      <option value="Chain">Chain</option>
-    </select>
-
-    <input id="c_wire_dia" placeholder="와이어 Φ (숫자만)" style="display:none;" />
-    <input id="c_wire_len" placeholder="와이어 길이 M (숫자만)" style="display:none;" />
-
-    <select id="c_reeving" style="display:none;">
-      <option value="">싱글/더블</option>
-      <option value="Single">Single</option>
-      <option value="Double">Double</option>
-    </select>
-
-    <div></div><div></div><div></div>
-  </div>
-
-  <div class="row">
-    <button onclick="addCrane()">크레인 등록/수정 저장</button>
-  </div>
-
-  <hr />
-
-  <!-- 리스트 -->
-  <table>
-    <thead>
-      <tr>
-        <th>번호</th>
-        <th>지역</th>
-        <th>타입</th>
-        <th>브랜드</th>
-        <th>톤수</th>
-        <th>호이스트</th>
-        <th>그룹</th>
-        <th>상태</th>
-        <th>관리</th>
-      </tr>
-    </thead>
-    <tbody id="craneList"></tbody>
-  </table>
-
-  <!-- ✅ 중복 로딩 금지: 딱 1번만 -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js"></script>
-
-  <!-- cranes.html 전용 보조 스크립트 (app.js는 수정하지 않음) -->
-  <script>
-    // ✅ 등록: 번호입력/번호없음 UI 제어
-    function setNoMode() {
-      const mode = document.getElementById("c_no_mode")?.value;
-      const no = document.getElementById("c_no");
-      if (!no) return;
-
-      if (mode === "none") {
-        no.value = "번호없음";
-        no.readOnly = true;
-        no.style.background = "#f4f4f4";
-      } else {
-        if (no.value === "번호없음") no.value = "";
-        no.readOnly = false;
-        no.style.background = "";
+    <style>
+      @media (max-width:900px){
+        .card > div{ grid-template-columns:1fr!important; }
       }
-    }
+    </style>
+  </section>
 
-    // ✅ 필터: 번호구분 UI 제어 (기존 오류 원인 함수 누락 → 여기서 해결)
-    function applyNoModeFilterUI() {
-      const mode = document.getElementById("f_no_mode")?.value;
-      const fno = document.getElementById("f_no");
-      if (!fno) return;
+  <section class="card">
+    <h2>크레인 등록</h2>
 
-      if (mode === "none") {
-        // 번호없음: 입력칸 비활성 + 값 고정
-        fno.value = "번호없음";
-        fno.readOnly = true;
-        fno.style.background = "#f4f4f4";
-      } else if (mode === "input") {
-        // 번호입력: 입력칸 활성
-        if (fno.value === "번호없음") fno.value = "";
-        fno.readOnly = false;
-        fno.style.background = "";
-      } else {
-        // 전체: 입력칸 활성
-        if (fno.value === "번호없음") fno.value = "";
-        fno.readOnly = false;
-        fno.style.background = "";
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+      <select id="c_no_mode" class="input" style="max-width:220px;" onchange="setNoMode()">
+        <option value="input">번호입력</option>
+        <option value="none">번호없음</option>
+      </select>
+      <div style="color:#6b7280;font-weight:700;display:flex;align-items:center;">
+        번호입력: 숫자만 치면 C- 자동 / 번호없음: “번호없음” 저장
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:12px;">
+      <input id="c_no" class="input" placeholder="크레인 번호(숫자만 가능)" onblur="autoCraneNoPrefix()" />
+
+      <select id="c_area" class="input">
+        <option value="">지역 선택</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+      </select>
+
+      <select id="c_type" class="input">
+        <option value="">크레인 타입 선택</option>
+        <option value="EOT">EOT</option>
+        <option value="Suspension">Suspension</option>
+        <option value="Gantry">Gantry</option>
+        <option value="Post">Post</option>
+        <option value="Wall">Wall</option>
+        <option value="Monorail">Monorail</option>
+        <option value="Service Crane">Service Crane</option>
+      </select>
+
+      <input id="c_brand" class="input" placeholder="브랜드" />
+      <input id="c_ton" class="input" placeholder="톤수" />
+      <input id="c_group" class="input" placeholder="그룹" />
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:12px;">
+      <select id="c_hoist_type" class="input" onchange="toggleHoistDetail()">
+        <option value="">호이스트 타입</option>
+        <option value="Wire">Wire</option>
+        <option value="Chain">Chain</option>
+      </select>
+
+      <input id="c_wire_dia" class="input" placeholder="와이어 Φ (숫자)" style="display:none;" />
+      <input id="c_wire_len" class="input" placeholder="와이어 길이 M (숫자)" style="display:none;" />
+
+      <select id="c_reeving" class="input" style="display:none;">
+        <option value="">싱글/더블</option>
+        <option value="Single">Single</option>
+        <option value="Double">Double</option>
+      </select>
+
+      <div></div><div></div>
+    </div>
+
+    <button class="btn" onclick="addCrane()">크레인 등록/수정 저장</button>
+
+    <style>
+      @media (max-width:900px){
+        section.card > div{ grid-template-columns:1fr!important; }
       }
-    }
+    </style>
+  </section>
 
-    // 페이지 진입 시 기본 모드 적용
-    document.addEventListener("DOMContentLoaded", () => {
-      setNoMode();
-      applyNoModeFilterUI();
-    });
-  </script>
+  <section class="card">
+    <h2>리스트</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>번호</th>
+          <th>지역</th>
+          <th>타입</th>
+          <th>브랜드</th>
+          <th>톤수</th>
+          <th>호이스트</th>
+          <th>그룹</th>
+          <th>상태</th>
+          <th>관리</th>
+        </tr>
+      </thead>
+      <tbody id="craneList"></tbody>
+    </table>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+
+<script>
+  function setNoMode() {
+    const mode = document.getElementById("c_no_mode")?.value;
+    const no = document.getElementById("c_no");
+    if (!no) return;
+
+    if (mode === "none") {
+      no.value = "번호없음";
+      no.readOnly = true;
+      no.style.background = "#f3f4f6";
+    } else {
+      if (no.value === "번호없음") no.value = "";
+      no.readOnly = false;
+      no.style.background = "";
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    setNoMode();
+  });
+</script>
+
 </body>
 </html>
