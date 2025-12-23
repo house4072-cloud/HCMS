@@ -2,95 +2,66 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HCMS | 비고 리스트</title>
 
   <!-- 공용 CSS -->
   <link rel="stylesheet" href="assets/hcms.css">
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js"></script>
-
   <style>
     body {
-      margin: 0;
-      padding: 24px;
       font-family: Arial, sans-serif;
-      background: #e5e6ea; /* 🔥 회색톤 */
-      color: #222;
+      padding: 24px;
+      background: var(--bg);
+      color: var(--text);
     }
 
     h1 {
       margin-bottom: 20px;
-      font-size: 26px;
+    }
+
+    /* ===== 필터 ===== */
+    .filter-box {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .filter-box input,
+    .filter-box select,
+    .filter-box button {
+      height: 52px;
+      font-size: 17px;
+      padding: 0 12px;
+    }
+
+    button {
+      font-weight: bold;
+      cursor: pointer;
     }
 
     /* ===== 테이블 ===== */
     table {
       width: 100%;
       border-collapse: collapse;
-      background: #f7f7f9;
+      background: var(--panel);
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 14px;
+      text-align: center;
+      vertical-align: top;
     }
 
     th {
-      background: #d9dbe1;
-      padding: 14px;
-      font-size: 16px;
-      border: 1px solid #c9cbd3;
+      background: #e9edf2;
     }
 
-    td {
-      padding: 14px;
-      border: 1px solid #d0d2da;
-      vertical-align: top;
-      font-size: 16px;
-    }
-
-    tr:nth-child(even) {
-      background: #f0f1f5;
-    }
-
-    /* ===== 컬럼 폭 ===== */
-    th.col-no, td.col-no { width: 10%; }
-    th.col-type, td.col-type { width: 15%; }
-    th.col-area, td.col-area { width: 8%; }
-    th.col-loc, td.col-loc { width: 12%; }
-    th.col-remark, td.col-remark { width: 45%; }
-
-    /* ===== 비고 ===== */
-    .remark-box {
-      white-space: pre-wrap;
+    td.remark {
       text-align: left;
-      line-height: 1.5;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 120px;
-      resize: vertical;
-      padding: 12px;
-      font-size: 15px;
-      border-radius: 6px;
-      border: 1px solid #bbb;
-      box-sizing: border-box;
-    }
-
-    .btn {
-      margin-top: 8px;
-      padding: 8px 14px;
-      font-size: 14px;
-      font-weight: bold;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      background: #ff8a00;
-      color: #000;
-    }
-
-    .btn.gray {
-      background: #999;
-      color: #fff;
+      min-width: 520px;   /* 🔥 비고 크게 */
+      white-space: pre-wrap;
     }
   </style>
 </head>
@@ -99,73 +70,100 @@
 
 <h1>비고 리스트</h1>
 
+<!-- ===== 필터 ===== -->
+<div class="filter-box">
+  <input id="f_no" placeholder="크레인 번호" />
+
+  <select id="f_area">
+    <option value="">지역 전체</option>
+    <option value="A">A</option>
+    <option value="B">B</option>
+  </select>
+
+  <select id="f_type">
+    <option value="">크레인 타입 전체</option>
+    <option value="EOT">EOT</option>
+    <option value="Suspension">Suspension</option>
+    <option value="Gantry">Gantry</option>
+    <option value="Post">Post</option>
+    <option value="Wall">Wall</option>
+    <option value="Monorail">Monorail</option>
+    <option value="Service Crane">Service Crane</option>
+    <option value="타워">Tower</option>
+  </select>
+
+  <button onclick="loadRemarks()">필터 적용</button>
+</div>
+
+<!-- ===== 리스트 ===== -->
 <table>
   <thead>
     <tr>
-      <th class="col-no">번호</th>
-      <th class="col-type">크레인 타입</th>
-      <th class="col-area">지역</th>
-      <th class="col-loc">위치</th>
-      <th class="col-remark">비고</th>
+      <th>크레인 번호</th>
+      <th>타입</th>
+      <th>지역</th>
+      <th>위치</th>
+      <th>비고</th>
+      <th>작성일</th>
     </tr>
   </thead>
   <tbody id="remarkList"></tbody>
 </table>
 
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- App -->
+<script src="app.js"></script>
+
 <script>
-  document.addEventListener("DOMContentLoaded", async () => {
-    const { data, error } = await sb
-      .from("remarks")
-      .select("id, crane_no, crane_type, area, location, content")
-      .order("id", { ascending: false });
+async function loadRemarks() {
+  let query = sb
+    .from("remarks")
+    .select(`
+      crane_no,
+      content,
+      created_at,
+      cranes (
+        crane_type,
+        area,
+        location
+      )
+    `)
+    .order("created_at", { ascending: false });
 
-    if (error) return alert(error.message);
+  const no = document.getElementById("f_no")?.value?.trim();
+  const area = document.getElementById("f_area")?.value;
+  const type = document.getElementById("f_type")?.value;
 
-    const tbody = document.getElementById("remarkList");
-    tbody.innerHTML = "";
+  if (no) query = query.ilike("crane_no", `%${no}%`);
+  if (area) query = query.eq("cranes.area", area);
+  if (type) query = query.eq("cranes.crane_type", type);
 
-    data.forEach(r => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td class="col-no">${r.crane_no || "번호없음"}</td>
-        <td class="col-type">${r.crane_type || ""}</td>
-        <td class="col-area">${r.area || ""}</td>
-        <td class="col-loc">${r.location || ""}</td>
-        <td class="col-remark">
-          <div class="remark-box" id="view-${r.id}">
-            ${r.content || ""}
-          </div>
-          <textarea id="edit-${r.id}" style="display:none;">${r.content || ""}</textarea>
-          <br>
-          <button class="btn" onclick="editRemark('${r.id}')">수정</button>
-          <button class="btn gray" onclick="saveRemark('${r.id}')" style="display:none;" id="save-${r.id}">저장</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
+  const { data, error } = await query;
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  const tbody = document.getElementById("remarkList");
+  tbody.innerHTML = "";
+
+  data.forEach(r => {
+    const c = r.cranes || {};
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.crane_no || ""}</td>
+      <td>${c.crane_type || ""}</td>
+      <td>${c.area || ""}</td>
+      <td>${c.location || ""}</td>
+      <td class="remark">${r.content || ""}</td>
+      <td>${r.created_at ? r.created_at.slice(0,10) : ""}</td>
+    `;
+    tbody.appendChild(tr);
   });
+}
 
-  function editRemark(id) {
-    document.getElementById(`view-${id}`).style.display = "none";
-    document.getElementById(`edit-${id}`).style.display = "block";
-    document.getElementById(`save-${id}`).style.display = "inline-block";
-  }
-
-  async function saveRemark(id) {
-    const content = document.getElementById(`edit-${id}`).value;
-
-    const { error } = await sb
-      .from("remarks")
-      .update({ content })
-      .eq("id", id);
-
-    if (error) return alert(error.message);
-
-    document.getElementById(`view-${id}`).innerText = content;
-    document.getElementById(`view-${id}`).style.display = "block";
-    document.getElementById(`edit-${id}`).style.display = "none";
-    document.getElementById(`save-${id}`).style.display = "none";
-  }
+document.addEventListener("DOMContentLoaded", loadRemarks);
 </script>
 
 </body>
