@@ -2,138 +2,247 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HCMS | 비고 리스트</title>
 
+  <!-- 공용 CSS -->
   <link rel="stylesheet" href="assets/hcms.css">
+
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js"></script>
 
   <style>
     body {
+      margin: 0;
       font-family: Arial, sans-serif;
-      padding: 24px;
-      background: #f2f3f5;
+      background: #f2f2f2; /* 🔥 밝은 회색톤 */
       color: #222;
     }
 
-    h1 { margin-bottom: 20px; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
+    /* ===== 상단바 ===== */
+    .topbar {
+      background: #ff8a00;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
-    th, td {
+    .topbar img {
+      height: 44px;
+    }
+
+    .topbar .title {
+      font-size: 26px;
+      font-weight: 900;
+      color: #000;
+    }
+
+    /* ===== 레이아웃 ===== */
+    .container {
+      max-width: 1600px;
+      margin: auto;
+      padding: 28px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    h2 {
+      margin: 0 0 16px 0;
+      font-size: 24px;
+    }
+
+    /* ===== 필터 ===== */
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    input, select {
+      height: 52px;
+      font-size: 16px;
+      padding: 0 14px;
+      border-radius: 8px;
       border: 1px solid #ccc;
-      padding: 14px;
-      text-align: center;
-      vertical-align: top;
     }
 
-    th {
+    .btn {
+      height: 52px;
+      padding: 0 24px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
       background: #ff8a00;
       color: #000;
     }
 
-    td.remark {
-      text-align: left;
-      min-width: 400px;
-      white-space: pre-wrap;
+    .btn.danger {
+      background: #ff4444;
+      color: #fff;
     }
 
-    button {
-      padding: 6px 12px;
+    .btn.gray {
+      background: #ddd;
+      color: #222;
+    }
+
+    /* ===== 테이블 ===== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 14px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #f6f6f6;
       font-weight: bold;
-      cursor: pointer;
+    }
+
+    td.remark {
+      text-align: left;
+      white-space: pre-wrap;
+      min-width: 400px; /* 🔥 비고 크게 */
+    }
+
+    tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    /* ===== 반응형 ===== */
+    @media (max-width: 900px) {
+      .filter-grid {
+        grid-template-columns: 1fr;
+      }
+
+      td.remark {
+        min-width: auto;
+      }
     }
   </style>
 </head>
 
 <body>
 
-<h1>비고 리스트</h1>
+<!-- ===== 상단 ===== -->
+<header class="topbar">
+  <img src="assets/hope.png" alt="희망이엔지">
+  <div class="title">비고 리스트</div>
+  <img src="assets/hanwha.png" alt="한화에너지">
+</header>
 
-<table>
-  <thead>
-    <tr>
-      <th>번호</th>
-      <th>크레인 타입</th>
-      <th>지역</th>
-      <th>위치</th>
-      <th>비고</th>
-      <th>관리</th>
-    </tr>
-  </thead>
-  <tbody id="remarkList"></tbody>
-</table>
+<main class="container">
+
+  <!-- ===== 필터 ===== -->
+  <section class="card">
+    <h2>필터</h2>
+    <div class="filter-grid">
+      <input id="f_no" placeholder="크레인 번호" />
+      <input id="f_area" placeholder="지역" />
+      <input id="f_type" placeholder="크레인 타입" />
+      <button class="btn" onclick="loadRemarks()">필터 적용</button>
+    </div>
+  </section>
+
+  <!-- ===== 리스트 ===== -->
+  <section class="card">
+    <h2>비고 목록</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>크레인 번호</th>
+          <th>크레인 타입</th>
+          <th>지역</th>
+          <th>비고</th>
+          <th>관리</th>
+        </tr>
+      </thead>
+      <tbody id="remarkList"></tbody>
+    </table>
+  </section>
+
+</main>
 
 <script>
-async function loadRemarks() {
-  const { data: remarks, error: rErr } = await sb
-    .from("remarks")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co";
+  const SUPABASE_ANON_KEY = "너가쓰는 anon 키 그대로";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  if (rErr) return alert(rErr.message);
+  async function loadRemarks() {
+    let query = sb.from("remarks").select("*").order("created_at", { ascending: false });
 
-  const { data: cranes, error: cErr } = await sb
-    .from("cranes")
-    .select("crane_no, crane_type, area, group_name");
+    const no = document.getElementById("f_no").value.trim();
+    const area = document.getElementById("f_area").value.trim();
+    const type = document.getElementById("f_type").value.trim();
 
-  if (cErr) return alert(cErr.message);
+    if (no) query = query.ilike("crane_no", `%${no}%`);
+    if (area) query = query.ilike("area", `%${area}%`);
+    if (type) query = query.ilike("crane_type", `%${type}%`);
 
-  const craneMap = {};
-  cranes.forEach(c => craneMap[c.crane_no] = c);
+    const { data, error } = await query;
+    if (error) return alert(error.message);
 
-  const tbody = document.getElementById("remarkList");
-  tbody.innerHTML = "";
+    const tbody = document.getElementById("remarkList");
+    tbody.innerHTML = "";
 
-  remarks.forEach(r => {
-    const c = craneMap[r.crane_no] || {};
+    data.forEach(r => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${r.crane_no || ""}</td>
+        <td>${r.crane_type || ""}</td>
+        <td>${r.area || ""}</td>
+        <td class="remark">${r.content || ""}</td>
+        <td>
+          <button class="btn gray" onclick="editRemark('${r.id}','${r.content || ""}')">수정</button>
+          <button class="btn danger" onclick="deleteRemark('${r.id}')">삭제</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${r.crane_no}</td>
-      <td>${c.crane_type || ""}</td>
-      <td>${c.area || ""}</td>
-      <td>${c.group_name || ""}</td>
-      <td class="remark">${r.content}</td>
-      <td>
-        <button onclick="editRemark('${r.id}', '${r.content.replace(/'/g, "\\'")}')">수정</button>
-        <button onclick="deleteRemark('${r.id}')">삭제</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
+  async function editRemark(id, oldContent) {
+    const content = prompt("비고 수정", oldContent);
+    if (content === null) return;
 
-async function editRemark(id, oldText) {
-  const content = prompt("비고 수정", oldText);
-  if (!content) return;
+    const { error } = await sb
+      .from("remarks")
+      .update({ content })
+      .eq("id", id);
 
-  const { error } = await sb
-    .from("remarks")
-    .update({ content })
-    .eq("id", id);
+    if (error) return alert(error.message);
+    loadRemarks();
+  }
 
-  if (error) return alert(error.message);
-  loadRemarks();
-}
+  async function deleteRemark(id) {
+    if (!confirm("비고 삭제할까요?")) return;
 
-async function deleteRemark(id) {
-  if (!confirm("삭제할까요?")) return;
+    const { error } = await sb
+      .from("remarks")
+      .delete()
+      .eq("id", id);
 
-  const { error } = await sb
-    .from("remarks")
-    .delete()
-    .eq("id", id);
+    if (error) return alert(error.message);
+    loadRemarks();
+  }
 
-  if (error) return alert(error.message);
-  loadRemarks();
-}
-
-document.addEventListener("DOMContentLoaded", loadRemarks);
+  document.addEventListener("DOMContentLoaded", loadRemarks);
 </script>
 
 </body>
