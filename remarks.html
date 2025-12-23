@@ -8,118 +8,149 @@
   <!-- 공용 CSS -->
   <link rel="stylesheet" href="assets/hcms.css">
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      color: #222;
+      background: #f2f3f5;
+      color: #111;
     }
 
-    /* ===== 상단바 ===== */
+    /* 상단바 */
     .topbar {
+      position: relative;
       background: #ff8a00;
-      padding: 14px 20px;
+      padding: 14px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-
-    .topbar img {
-      height: 42px;
-    }
-
+    .topbar img { height: 44px; object-fit: contain; }
     .topbar .title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
       font-size: 26px;
       font-weight: 900;
       color: #000;
+      white-space: nowrap;
     }
 
-    /* ===== 컨테이너 ===== */
     .container {
       max-width: 1600px;
-      margin: auto;
-      padding: 28px;
+      margin: 0 auto;
+      padding: 18px;
     }
 
     .card {
       background: #ffffff;
       border-radius: 14px;
-      padding: 24px;
-      margin-bottom: 24px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.06);
     }
 
     h2 {
-      margin: 0 0 18px 0;
-      font-size: 24px;
+      margin: 0 0 14px 0;
+      font-size: 22px;
     }
 
-    /* ===== 필터 ===== */
+    /* 필터 */
     .filter-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-      margin-bottom: 16px;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      align-items: center;
     }
-
-    input, select, button {
-      height: 48px;
+    input, select, button, textarea {
+      height: 46px;
       font-size: 16px;
       padding: 0 12px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
+      border-radius: 10px;
+      border: 1px solid #d7dbe0;
       box-sizing: border-box;
+      background: #fff;
+    }
+    textarea {
+      height: 110px;          /* ✅ 엔터/여러줄 */
+      padding: 10px 12px;
+      resize: vertical;
+      line-height: 1.35;
+      white-space: pre-wrap;
     }
 
-    button {
-      cursor: pointer;
-      font-weight: bold;
-      background: #ff8a00;
+    .btn-row {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
       border: none;
+      cursor: pointer;
+      font-weight: 800;
+      background: #ff8a00;
       color: #000;
+      height: 46px;
+      padding: 0 16px;
+      border-radius: 10px;
     }
+    .btn.gray { background:#e9ecef; color:#111; }
+    .btn.red  { background:#ff4b4b; color:#fff; }
 
-    /* ===== 테이블 ===== */
+    /* 테이블 */
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 15px;
       background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
     }
-
-    th, td {
-      border: 1px solid #ddd;
+    thead th {
+      background: #ffe2bd;
+      color: #111;
       padding: 12px;
+      font-size: 15px;
+      border-bottom: 1px solid #f0c992;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    tbody td {
+      padding: 12px;
+      border-bottom: 1px solid #eef1f4;
       vertical-align: top;
       text-align: center;
+      font-size: 15px;
     }
+    tbody tr:hover { background:#fafbfc; }
 
-    th {
-      background: #f0f0f0;
-      font-weight: bold;
-    }
-
-    td.remark {
+    .td-remark {
       text-align: left;
-      white-space: pre-wrap; /* ✅ 줄바꿈 유지 */
+      white-space: pre-wrap; /* ✅ 엔터 표시 */
+      word-break: break-word;
+      min-width: 420px;      /* ✅ 비고칸 크게 */
     }
 
-    .btn-mini {
-      height: 36px;
+    .mini {
+      height: 34px;
       font-size: 14px;
       padding: 0 10px;
-      margin: 2px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 800;
     }
+    .mini.edit { background:#ff8a00; color:#000; }
+    .mini.del  { background:#ff4b4b; color:#fff; }
+    .mini.save { background:#111; color:#fff; }
+    .mini.cancel { background:#e9ecef; color:#111; }
 
-    /* ===== 반응형 ===== */
-    @media (max-width: 900px) {
-      .filter-grid {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 980px) {
+      .filter-grid { grid-template-columns: 1fr; }
+      .topbar img { height: 38px; }
+      .topbar .title { font-size: 22px; }
+      .td-remark { min-width: auto; }
     }
   </style>
 </head>
@@ -132,18 +163,20 @@
   <img src="assets/hanwha.png" alt="한화에너지">
 </header>
 
-<main class="container">
+<div class="container">
 
-  <!-- ===== 필터 ===== -->
+  <!-- 필터 -->
   <section class="card">
     <h2>필터</h2>
     <div class="filter-grid">
-      <input id="f_no" placeholder="크레인 번호">
+      <input id="f_no" placeholder="크레인 번호 (예: C-014 / TC-01)" />
       <select id="f_area">
         <option value="">지역 전체</option>
         <option value="A">A</option>
         <option value="B">B</option>
       </select>
+
+      <!-- ✅ Post / Wall 포함 + 타워 포함 -->
       <select id="f_type">
         <option value="">타입 전체</option>
         <option value="EOT">EOT</option>
@@ -155,137 +188,177 @@
         <option value="Service Crane">Service Crane</option>
         <option value="타워">타워</option>
       </select>
-      <button onclick="loadRemarks()">필터 적용</button>
+
+      <input id="f_loc" placeholder="위치(키워드)" />
+
+      <select id="f_resolved">
+        <option value="">해결여부 전체</option>
+        <option value="false">미해결</option>
+        <option value="true">해결</option>
+      </select>
+
+      <button class="btn" onclick="loadRemarks()">필터 적용</button>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn gray" onclick="resetFilters()">필터 초기화</button>
+      <button class="btn gray" onclick="window.print()">프린트</button>
     </div>
   </section>
 
-  <!-- ===== 리스트 ===== -->
+  <!-- 리스트 -->
   <section class="card">
-    <h2>비고 목록</h2>
+    <h2>리스트</h2>
     <table>
       <thead>
         <tr>
-          <th>번호</th>
-          <th>타입</th>
-          <th>지역</th>
-          <th style="width:50%">비고</th>
-          <th>관리</th>
+          <th style="width:140px;">번호</th>
+          <th style="width:120px;">타입</th>
+          <th style="width:90px;">지역</th>
+          <th style="width:220px;">위치</th>
+          <th>비고</th>
+          <th style="width:110px;">해결</th>
+          <th style="width:160px;">관리</th>
         </tr>
       </thead>
       <tbody id="remarkList"></tbody>
     </table>
   </section>
 
-</main>
+</div>
+
+<!-- Supabase + app.js (sb 사용) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
 
 <script>
-  // ===== Supabase 초기화 =====
-  const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA";
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
+  }
+
+  function resetFilters() {
+    document.getElementById("f_no").value = "";
+    document.getElementById("f_area").value = "";
+    document.getElementById("f_type").value = "";
+    document.getElementById("f_loc").value = "";
+    document.getElementById("f_resolved").value = "";
+    loadRemarks();
+  }
 
   async function loadRemarks() {
-    const no = document.getElementById("f_no").value.trim();
-    const area = document.getElementById("f_area").value;
-    const type = document.getElementById("f_type").value;
-
-    let query = sb
-      .from("remarks")
-      .select("id, crane_no, crane_type, area, content")
-
-    if (no) query = query.ilike("crane_no", `%${no}%`);
-    if (area) query = query.eq("area", area);
-    if (type) query = query.eq("crane_type", type);
-
-    const { data, error } = await query;
-    if (error) return alert(error.message);
-
     const tbody = document.getElementById("remarkList");
     tbody.innerHTML = "";
 
+    // ✅ remarks에서 지역/타입/위치 컬럼 직접 사용 (SQL로 컬럼 추가했으니 400 없어야 정상)
+    let q = sb.from("remarks").select("id,crane_no,content,resolved,area,crane_type,location").order("created_at", { ascending:false });
+
+    const fNo = document.getElementById("f_no").value.trim();
+    const fArea = document.getElementById("f_area").value;
+    const fType = document.getElementById("f_type").value;
+    const fLoc = document.getElementById("f_loc").value.trim();
+    const fRes = document.getElementById("f_resolved").value;
+
+    if (fNo) q = q.ilike("crane_no", `%${fNo}%`);
+    if (fArea) q = q.eq("area", fArea);
+    if (fType) q = q.eq("crane_type", fType);
+    if (fLoc) q = q.ilike("location", `%${fLoc}%`);
+    if (fRes !== "") q = q.eq("resolved", fRes === "true");
+
+    const { data, error } = await q;
+    if (error) return alert(error.message);
+
     data.forEach(r => {
       const tr = document.createElement("tr");
+      tr.dataset.id = r.id;
+
       tr.innerHTML = `
-        <td>${r.crane_no || ""}</td>
-        <td>${r.crane_type || ""}</td>
-        <td>${r.area || ""}</td>
-        <td class="remark">${r.content || ""}</td>
+        <td>${esc(r.crane_no)}</td>
+        <td>${esc(r.crane_type)}</td>
+        <td>${esc(r.area)}</td>
+        <td>${esc(r.location)}</td>
+
+        <td class="td-remark" data-view="1">${esc(r.content)}</td>
+
         <td>
-          <button class="btn-mini" onclick="editRemark('${r.id}')">수정</button>
-          <button class="btn-mini" onclick="deleteRemark('${r.id}')">삭제</button>
+          <input type="checkbox" ${r.resolved ? "checked" : ""} onchange="toggleResolved('${r.id}', this.checked)" />
+        </td>
+
+        <td>
+          <button class="mini edit" onclick="startEdit('${r.id}')">수정</button>
+          <button class="mini del" onclick="deleteRemark('${r.id}')">삭제</button>
         </td>
       `;
       tbody.appendChild(tr);
     });
   }
 
+  async function toggleResolved(id, val) {
+    const { error } = await sb.from("remarks").update({ resolved: val }).eq("id", id);
+    if (error) alert(error.message);
+  }
+
+  function startEdit(id) {
+    const tr = document.querySelector(`tr[data-id="${id}"]`);
+    if (!tr) return;
+
+    const tdRemark = tr.querySelector(".td-remark");
+    const current = tdRemark.textContent;
+
+    tdRemark.dataset.view = "0";
+    tdRemark.innerHTML = `
+      <textarea id="edit_${id}">${current}</textarea>
+    `;
+
+    const tdManage = tr.children[6];
+    tdManage.innerHTML = `
+      <button class="mini save" onclick="saveEdit('${id}')">저장</button>
+      <button class="mini cancel" onclick="cancelEdit('${id}', ${JSON.stringify(current)})">취소</button>
+    `;
+  }
+
+  function cancelEdit(id, original) {
+    const tr = document.querySelector(`tr[data-id="${id}"]`);
+    if (!tr) return;
+
+    tr.querySelector(".td-remark").innerHTML = esc(original);
+    tr.children[6].innerHTML = `
+      <button class="mini edit" onclick="startEdit('${id}')">수정</button>
+      <button class="mini del" onclick="deleteRemark('${id}')">삭제</button>
+    `;
+  }
+
+  async function saveEdit(id) {
+    const ta = document.getElementById(`edit_${id}`);
+    if (!ta) return;
+
+    const content = ta.value; // ✅ 엔터 포함 그대로 저장
+    const { error } = await sb.from("remarks").update({ content }).eq("id", id);
+    if (error) return alert(error.message);
+
+    loadRemarks();
+  }
+
   async function deleteRemark(id) {
-    if (!confirm("비고를 삭제할까요?")) return;
+    if (!confirm("정말 삭제할까요?")) return;
     const { error } = await sb.from("remarks").delete().eq("id", id);
     if (error) return alert(error.message);
     loadRemarks();
   }
 
-  /* ===== textarea 기반 비고 수정 (엔터 가능) ===== */
-  async function editRemark(id) {
-    const { data, error } = await sb
-      .from("remarks")
-      .select("content")
-      .eq("id", id)
-      .single();
+  document.addEventListener("DOMContentLoaded", () => {
+    loadRemarks();
+  });
 
-    if (error) return alert(error.message);
-
-    const overlay = document.createElement("div");
-    overlay.style.position = "fixed";
-    overlay.style.top = 0;
-    overlay.style.left = 0;
-    overlay.style.right = 0;
-    overlay.style.bottom = 0;
-    overlay.style.background = "rgba(0,0,0,0.4)";
-    overlay.style.display = "flex";
-    overlay.style.alignItems = "center";
-    overlay.style.justifyContent = "center";
-    overlay.style.zIndex = 9999;
-
-    const box = document.createElement("div");
-    box.style.background = "#fff";
-    box.style.padding = "20px";
-    box.style.borderRadius = "10px";
-    box.style.width = "520px";
-    box.style.maxWidth = "95%";
-
-    box.innerHTML = `
-      <h3>비고 수정</h3>
-      <textarea id="remarkEditArea"
-        style="width:100%;height:180px;font-size:15px;">${data.content || ""}</textarea>
-      <div style="text-align:right;margin-top:12px;">
-        <button onclick="document.body.removeChild(this.closest('.overlay'))">취소</button>
-        <button id="saveRemarkBtn" style="margin-left:10px;">저장</button>
-      </div>
-    `;
-
-    overlay.className = "overlay";
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-
-    document.getElementById("saveRemarkBtn").onclick = async () => {
-      const newContent = document.getElementById("remarkEditArea").value.trim();
-      if (!newContent) return alert("비고 내용이 비어있습니다.");
-
-      const { error: upErr } = await sb
-        .from("remarks")
-        .update({ content: newContent })
-        .eq("id", id);
-
-      if (upErr) return alert(upErr.message);
-
-      document.body.removeChild(overlay);
-      loadRemarks();
-    };
-  }
-
-  document.addEventListener("DOMContentLoaded", loadRemarks);
+  // 전역 바인딩(혹시 필요)
+  window.loadRemarks = loadRemarks;
+  window.resetFilters = resetFilters;
+  window.startEdit = startEdit;
+  window.saveEdit = saveEdit;
+  window.cancelEdit = cancelEdit;
+  window.deleteRemark = deleteRemark;
+  window.toggleResolved = toggleResolved;
 </script>
 
 </body>
