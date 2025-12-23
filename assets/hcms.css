@@ -80,17 +80,14 @@ body{
   margin: 18px 0;
 }
 
-h1, h2, h3{
-  margin: 0 0 14px 0;
-}
+h1, h2, h3{ margin: 0 0 14px 0; }
 h1{ font-size: 28px; }
 h2{ font-size: 24px; }
 h3{ font-size: 20px; }
-
 .muted{ color: var(--muted); }
 
 /* ===== 입력/셀렉트 ===== */
-.input, input, select{
+.input, input, select, textarea{
   height: 52px;
   font-size: 18px;
   padding: 0 14px;
@@ -102,38 +99,82 @@ h3{ font-size: 20px; }
   outline: none;
 }
 
-.input:focus, input:focus, select:focus{
+textarea{
+  height: auto;              /* textarea는 높이 고정 안함 */
+  padding: 12px 14px;
+  line-height: 1.35;
+}
+
+.input:focus, input:focus, select:focus, textarea:focus{
   border-color: rgba(255,138,0,.65);
   box-shadow: 0 0 0 3px rgba(255,138,0,.18);
 }
 
-/* ===== 버튼 ===== */
-.btn, button{
+/* =========================
+   ✅ 버튼(중요): 메인에서 색 안 먹는 문제 해결
+   - button / .btn / a.btn 모두 동일 처리
+   - 다른 CSS가 덮어써도 이게 우선되게 작성
+========================= */
+.btn,
+button,
+a.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
   height: 52px;
   padding: 0 22px;
   font-size: 18px;
   font-weight: 800;
+  border-radius: 12px;
 
   border: 0;
-  border-radius: 12px;
   cursor: pointer;
 
-  background: var(--brand);
-  color: #000;
+  background: var(--brand) !important;
+  color: #000 !important;
+
+  text-decoration: none;
+  user-select: none;
 }
 
-.btn:hover, button:hover{ filter: brightness(.98); }
-.btn:active, button:active{ transform: translateY(1px); }
-
-.btn.warn{
-  background: var(--danger);
-  color: #fff;
+.btn:hover,
+button:hover,
+a.btn:hover{
+  background: var(--brand-2) !important;
+  filter: none;
 }
 
-.btn.ghost{
-  background: transparent;
-  border: 1px solid var(--line);
-  color: var(--text);
+.btn:active,
+button:active,
+a.btn:active{
+  transform: translateY(1px);
+}
+
+/* 경고 버튼 */
+.btn.warn,
+button.warn,
+a.btn.warn{
+  background: var(--danger) !important;
+  color: #fff !important;
+}
+
+/* 고스트 버튼(테두리) */
+.btn.ghost,
+button.ghost,
+a.btn.ghost{
+  background: transparent !important;
+  border: 1px solid var(--line) !important;
+  color: var(--text) !important;
+}
+
+/* 비활성 */
+.btn:disabled,
+button:disabled,
+a.btn:disabled{
+  opacity: .55;
+  cursor: not-allowed;
+  transform:none;
 }
 
 /* ===== 폼 그리드 ===== */
