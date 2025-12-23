@@ -8,18 +8,14 @@
   <!-- 공용 CSS -->
   <link rel="stylesheet" href="assets/hcms.css">
 
-  <!-- (선택) 파비콘 404 없애고 싶으면 파일 있는 걸로 바꿔 -->
-  <!-- <link rel="icon" href="assets/hcms.svg"> -->
-
   <style>
     body{
       margin:0;
       font-family: Arial, sans-serif;
-      background:#f2f3f5; /* 밝은 회색톤 */
+      background:#f2f3f5;
       color:#222;
     }
 
-    /* ===== TOPBAR ===== */
     .topbar{
       position: sticky;
       top:0;
@@ -30,10 +26,7 @@
       align-items:center;
       justify-content:space-between;
     }
-    .topbar img{
-      height:46px;
-      object-fit:contain;
-    }
+    .topbar img{ height:46px; object-fit:contain; }
     .topbar .title{
       font-size:26px;
       font-weight:900;
@@ -41,7 +34,6 @@
       letter-spacing:1px;
     }
 
-    /* ===== WATERMARK (희망 워터마크) ===== */
     .wrap{
       position:relative;
       max-width:1600px;
@@ -52,7 +44,7 @@
       content:"";
       position:absolute;
       inset:0;
-      background-image:url("assets/watermark_hope.png"); /* 파일 없으면 그냥 안보임 */
+      background-image:url("assets/watermark_hope.png");
       background-repeat:no-repeat;
       background-position:center;
       background-size:520px auto;
@@ -76,13 +68,6 @@
       color:#222;
     }
 
-    /* ===== 필터 ===== */
-    .filter-grid{
-      display:grid;
-      grid-template-columns: 1.2fr 1fr 1.6fr auto;
-      gap:10px;
-      align-items:center;
-    }
     .input, select, button, textarea{
       height:52px;
       font-size:16px;
@@ -92,6 +77,16 @@
       box-sizing:border-box;
       background:#fff;
     }
+
+    textarea{
+      height:auto;
+      padding:12px;
+      line-height:1.35;
+      white-space:pre-wrap;
+      resize:vertical;
+      min-height:100px;
+    }
+
     button{
       cursor:pointer;
       font-weight:900;
@@ -112,7 +107,20 @@
       color:#fff;
     }
 
-    /* ===== 테이블 ===== */
+    .grid-add{
+      display:grid;
+      grid-template-columns: 260px 1fr auto;
+      gap:10px;
+      align-items:start;
+    }
+
+    .filter-grid{
+      display:grid;
+      grid-template-columns: 1.2fr 1fr 1.6fr auto;
+      gap:10px;
+      align-items:center;
+    }
+
     table{
       width:100%;
       border-collapse:collapse;
@@ -134,7 +142,7 @@
     }
     td.remark-cell{
       text-align:left;
-      white-space:pre-wrap;     /* ✅ 엔터 줄바꿈 표시 */
+      white-space:pre-wrap;
       word-break:break-word;
       width:55%;
     }
@@ -146,7 +154,6 @@
       margin:2px 3px;
     }
 
-    /* ===== 수정 모달 ===== */
     .modal-back{
       display:none;
       position:fixed;
@@ -170,7 +177,7 @@
       font-weight:900;
     }
     .modal textarea{
-      height:220px;           /* ✅ 길게 */
+      height:220px;
       width:100%;
       padding:12px;
       font-size:16px;
@@ -178,7 +185,7 @@
       border-radius:12px;
       border:1px solid #d8dbe1;
       resize:vertical;
-      white-space:pre-wrap;   /* ✅ 엔터 허용 */
+      white-space:pre-wrap;
     }
     .modal-row{
       display:flex;
@@ -187,8 +194,15 @@
       margin-top:12px;
     }
 
+    .hint{
+      margin-top:8px;
+      font-size:13px;
+      color:#666;
+    }
+
     @media (max-width: 900px){
       .filter-grid{ grid-template-columns:1fr; }
+      .grid-add{ grid-template-columns:1fr; }
       td.remark-cell{ width:auto; }
       .topbar .title{ font-size:22px; }
       .topbar img{ height:40px; }
@@ -205,6 +219,27 @@
 </header>
 
 <div class="wrap">
+
+  <!-- ✅ 비고 추가 -->
+  <section class="card">
+    <h2>비고 추가</h2>
+
+    <div class="grid-add">
+      <input id="a_no" class="input" placeholder="크레인 번호 (예: 61 / C-014 / TC-61)" />
+
+      <textarea id="a_content" placeholder="비고 내용 (엔터 가능)"></textarea>
+
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button onclick="addRemark()">등록</button>
+        <button class="gray" onclick="clearAdd()">초기화</button>
+      </div>
+    </div>
+
+    <div class="hint">
+      • 소형은 숫자만 치면 자동으로 <b>C-</b> 붙음<br>
+      • 타워는 충돌 방지 때문에 <b>TC-</b> 붙여서 입력 추천
+    </div>
+  </section>
 
   <!-- 필터 -->
   <section class="card">
@@ -229,7 +264,7 @@
         <option value="Tower">Tower</option>
       </select>
 
-      <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-start;">
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
         <button onclick="loadRemarks()">적용</button>
         <button class="gray" onclick="resetFilters()">초기화</button>
       </div>
@@ -261,7 +296,7 @@
 <div class="modal-back" id="editBack">
   <div class="modal">
     <h3 id="editTitle">비고 수정</h3>
-    <textarea id="editText" placeholder="여기에 비고 입력 (엔터 가능)"></textarea>
+    <textarea id="editText링 240? No keep id editText" placeholder="여기에 비고 입력 (엔터 가능)"></textarea>
     <div class="modal-row">
       <button class="gray" onclick="closeEdit()">취소</button>
       <button onclick="saveEdit()">저장</button>
@@ -269,29 +304,35 @@
   </div>
 </div>
 
-<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- App (sb 클라이언트가 여기서 생성되어 있어야 함) -->
 <script src="app.js"></script>
 
 <script>
-  // ====== 전역 상태 ======
-  let _craneMap = {};    // crane_no -> {area, crane_type, location...}
-  let _remarksCache = []; // remarks 원본
+  let _craneMap = {};
+  let _remarksCache = [];
   let _editingId = null;
 
   function _upper(v){ return String(v||"").trim().toUpperCase(); }
   function _isTowerByNo(no){ return _upper(no).startsWith("TC-"); }
 
+  function normalizeCraneNo(input){
+    let v = String(input||"").trim();
+    if (!v) return "";
+
+    // 타워는 TC- 유지
+    if (/^TC-/i.test(v)) return v.toUpperCase();
+
+    // 숫자만이면 소형으로 C- 붙임
+    if (/^\d+$/.test(v)) return `C-${v}`;
+
+    return v;
+  }
+
   async function _loadCraneMapOnce(){
     if (Object.keys(_craneMap).length > 0) return;
 
     const { data, error } = await sb.from("cranes").select("*");
-    if (error) {
-      console.error(error);
-      alert(error.message);
-      return;
-    }
+    if (error) return alert(error.message);
 
     const map = {};
     (data||[]).forEach(c=>{
@@ -299,6 +340,43 @@
       map[c.crane_no] = c;
     });
     _craneMap = map;
+  }
+
+  async function _fetchRemarksSafe(){
+    let r = await sb.from("remarks").select("*").order("created_at", { ascending: false });
+    if (r.error){
+      console.warn("remarks order(created_at) 실패 -> 무정렬 재시도", r.error);
+      r = await sb.from("remarks").select("*");
+    }
+    return r;
+  }
+
+  function clearAdd(){
+    const aNo = document.getElementById("a_no");
+    const aContent = document.getElementById("a_content");
+    if (aNo) aNo.value = "";
+    if (aContent) aContent.value = "";
+  }
+
+  async function addRemark(){
+    await _loadCraneMapOnce();
+
+    let crane_no = normalizeCraneNo(document.getElementById("a_no")?.value);
+    const content = document.getElementById("a_content")?.value ?? "";
+
+    if (!crane_no) return alert("크레인 번호 입력");
+    if (!String(content).trim()) return alert("비고 내용 입력");
+
+    // ⚠️ remarks는 최소 컬럼(crane_no, content)만 넣는다 (다른 컬럼 없어서 400 방지)
+    const { error } = await sb.from("remarks").insert({
+      crane_no,
+      content: content
+    });
+
+    if (error) return alert(error.message);
+
+    clearAdd();
+    loadRemarks();
   }
 
   function resetFilters(){
@@ -311,27 +389,11 @@
     loadRemarks();
   }
 
-  // ✅ created_at 없어서 400 나는 경우 대비: 1차 정렬 시도 -> 실패하면 정렬 없이 재조회
-  async function _fetchRemarksSafe(){
-    let q = sb.from("remarks").select("*");
-    let r = await q.order("created_at", { ascending: false });
-
-    if (r.error) {
-      // created_at 컬럼 없거나 권한/정책 문제 등
-      console.warn("remarks order(created_at) 실패 -> 무정렬 재시도", r.error);
-      r = await sb.from("remarks").select("*");
-    }
-    return r;
-  }
-
   async function loadRemarks(){
     await _loadCraneMapOnce();
 
     const { data, error } = await _fetchRemarksSafe();
-    if (error) {
-      console.error(error);
-      return alert(error.message);
-    }
+    if (error) return alert(error.message);
 
     _remarksCache = data || [];
 
@@ -343,18 +405,19 @@
       const no = r.crane_no || "";
       const crane = _craneMap[no] || {};
       let type = crane.crane_type || "";
-
-      // 타입이 비어있으면 TC-로 타워 추정
       if (!type && _isTowerByNo(no)) type = "타워";
-
       const area = crane.area || "";
 
       if (fNo && !String(no).includes(fNo)) return false;
       if (fArea && String(area) !== fArea) return false;
-      if (fType) {
-        // 타워는 "타워"/"Tower" 둘 다 인정
-        if ((fType === "타워" || fType === "Tower") && !(String(type).toLowerCase() === "타워" || String(type).toLowerCase() === "tower")) return false;
-        if (!(fType === "타워" || fType === "Tower") && String(type) !== fType) return false;
+
+      if (fType){
+        const t = String(type||"");
+        if ((fType === "타워" || fType === "Tower")){
+          if (!(t.toLowerCase() === "타워" || t.toLowerCase() === "tower")) return false;
+        } else {
+          if (t !== fType) return false;
+        }
       }
       return true;
     });
@@ -373,9 +436,9 @@
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${no}</td>
-        <td>${type || ""}</td>
-        <td>${area || ""}</td>
+        <td>${escapeHtml(no)}</td>
+        <td>${escapeHtml(type || "")}</td>
+        <td>${escapeHtml(area || "")}</td>
         <td class="remark-cell">${escapeHtml(content)}</td>
         <td>
           <button class="btn-mini" onclick="openEdit('${r.id}', '${escapeAttr(no)}')">수정</button>
@@ -386,7 +449,6 @@
     });
   }
 
-  // ===== 수정/삭제 =====
   function openEdit(id, craneNo){
     _editingId = id;
     document.getElementById("editTitle").innerText = `비고 수정 - ${craneNo}`;
@@ -406,22 +468,20 @@
     if (!_editingId) return;
 
     const text = document.getElementById("editText").value ?? "";
-    // remarks 테이블이 content 컬럼을 쓰는 전제로 업데이트
     const { error } = await sb.from("remarks").update({ content: text }).eq("id", _editingId);
     if (error) return alert(error.message);
 
     closeEdit();
-    await loadRemarks();
+    loadRemarks();
   }
 
   async function deleteRemark(id){
     if (!confirm("이 비고를 삭제할까요?")) return;
     const { error } = await sb.from("remarks").delete().eq("id", id);
     if (error) return alert(error.message);
-    await loadRemarks();
+    loadRemarks();
   }
 
-  // ===== escape helpers =====
   function escapeHtml(s){
     return String(s||"")
       .replaceAll("&","&amp;")
@@ -434,14 +494,15 @@
     return String(s||"").replaceAll("'","&#039;").replaceAll('"',"&quot;");
   }
 
-  // 자동 로드
   document.addEventListener("DOMContentLoaded", () => {
     loadRemarks();
   });
 
-  // 전역 바인딩
   window.loadRemarks = loadRemarks;
   window.resetFilters = resetFilters;
+  window.addRemark = addRemark;
+  window.clearAdd = clearAdd;
+
   window.openEdit = openEdit;
   window.closeEdit = closeEdit;
   window.saveEdit = saveEdit;
