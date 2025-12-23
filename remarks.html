@@ -9,203 +9,175 @@
   <link rel="stylesheet" href="assets/hcms.css">
 
   <style>
-    body{
-      margin:0;
+    body {
+      margin: 0;
       font-family: Arial, sans-serif;
-      background:#f2f3f5;
-      color:#222;
+      background: #e9ecef;
+      color: #111;
     }
 
-    .topbar{
-      position: sticky;
-      top:0;
-      z-index:50;
-      background:#ff8a00;
-      padding:14px 18px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
+    /* 상단바(메인과 동일 톤) */
+    .topbar {
+      position: relative;
+      background: #ff8a00;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .topbar img{ height:46px; object-fit:contain; }
-    .topbar .title{
-      font-size:26px;
-      font-weight:900;
-      color:#111;
-      letter-spacing:1px;
-    }
-
-    .wrap{
-      position:relative;
-      max-width:1600px;
-      margin:0 auto;
-      padding:22px 18px 34px;
-    }
-    .wrap::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background-image:url("assets/watermark_hope.png");
-      background-repeat:no-repeat;
-      background-position:center;
-      background-size:520px auto;
-      opacity:0.06;
-      pointer-events:none;
+    .topbar img { height: 44px; object-fit: contain; }
+    .topbar .title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 28px;
+      font-weight: 900;
+      color: #000;
+      white-space: nowrap;
     }
 
-    .card{
-      position:relative;
-      background:#ffffff;
-      border-radius:16px;
-      padding:18px;
+    .container {
+      max-width: 1600px;
+      margin: auto;
+      padding: 24px;
+      position: relative;
+    }
+
+    /* 워터마크(파일은 assets/watermark_hope.png 기준) */
+    .container::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url("assets/watermark_hope.png") center/520px no-repeat;
+      opacity: 0.06;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      background: #f7f8fa;
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 18px;
       box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-      margin-bottom:18px;
+      border: 1px solid #dee2e6;
     }
 
-    h2{
-      margin:0 0 12px;
-      font-size:22px;
-      font-weight:900;
-      color:#222;
+    h2 {
+      margin: 0 0 14px 0;
+      font-size: 22px;
+      color: #111;
     }
 
-    .input, select, button, textarea{
-      height:52px;
-      font-size:16px;
-      padding:0 12px;
-      border-radius:12px;
-      border:1px solid #d8dbe1;
-      box-sizing:border-box;
-      background:#fff;
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 200px 260px 180px;
+      gap: 10px;
+      align-items: center;
     }
 
-    textarea{
-      height:auto;
-      padding:12px;
-      line-height:1.35;
-      white-space:pre-wrap;
-      resize:vertical;
-      min-height:100px;
+    .input, select, textarea {
+      width: 100%;
+      height: 48px;
+      font-size: 16px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid #cfd4da;
+      background: #fff;
+      box-sizing: border-box;
     }
 
-    button{
-      cursor:pointer;
-      font-weight:900;
-      background:#ff8a00;
-      border:none;
-      color:#111;
-      padding:0 18px;
-      height:52px;
-      border-radius:12px;
-    }
-    button.gray{
-      background:#e6e8ee;
-      color:#222;
-      border:1px solid #d8dbe1;
-    }
-    button.danger{
-      background:#ff4b4b;
-      color:#fff;
+    textarea.input {
+      height: 90px;
+      padding: 10px 12px;
+      resize: vertical;
+      line-height: 1.35;
     }
 
-    .grid-add{
-      display:grid;
-      grid-template-columns: 260px 1fr auto;
-      gap:10px;
-      align-items:start;
+    .btn {
+      height: 48px;
+      padding: 0 16px;
+      font-size: 16px;
+      font-weight: 800;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      background: #ff8a00;
+      color: #000;
+      white-space: nowrap;
+    }
+    .btn.gray { background: #adb5bd; color: #111; }
+    .btn.red { background: #ff4444; color: #fff; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    th, td {
+      border: 1px solid #dee2e6;
+      padding: 12px;
+      text-align: center;
+      vertical-align: top;
+    }
+    th {
+      background: #fff3e0;
+      position: sticky;
+      top: 0;
+      z-index: 1;
     }
 
-    .filter-grid{
-      display:grid;
-      grid-template-columns: 1.2fr 1fr 1.6fr auto;
-      gap:10px;
-      align-items:center;
+    .td-left {
+      text-align: left;
+      white-space: pre-wrap;   /* ✅ 엔터/줄바꿈 보존 */
+      word-break: break-word;
     }
 
-    table{
-      width:100%;
-      border-collapse:collapse;
-      overflow:hidden;
-      border-radius:14px;
+    .btn-mini {
+      height: 36px;
+      font-size: 14px;
+      padding: 0 10px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 800;
+      margin: 2px;
+      background: #ff8a00;
+      color: #000;
     }
-    th, td{
-      border-bottom:1px solid #e7e9ee;
-      padding:12px 10px;
-      text-align:center;
-      font-size:15px;
-    }
-    th{
-      background:#f5f6f9;
-      font-weight:900;
-      position:sticky;
-      top:0;
-      z-index:1;
-    }
-    td.remark-cell{
-      text-align:left;
-      white-space:pre-wrap;
-      word-break:break-word;
-      width:55%;
-    }
-    .btn-mini{
-      height:38px;
-      font-size:14px;
-      padding:0 10px;
-      border-radius:10px;
-      margin:2px 3px;
-    }
+    .btn-mini.gray { background: #adb5bd; }
+    .btn-mini.red { background: #ff4444; color: #fff; }
 
-    .modal-back{
-      display:none;
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,0.45);
-      z-index:1000;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
+    /* 수정 모달 */
+    .modal-back {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
     }
-    .modal{
-      width:min(900px, 96vw);
-      background:#fff;
-      border-radius:16px;
-      padding:16px;
-      box-shadow:0 16px 40px rgba(0,0,0,0.22);
+    .modal {
+      width: min(900px, 96vw);
+      background: #fff;
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid #dee2e6;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.22);
     }
-    .modal h3{
-      margin:0 0 12px;
-      font-size:18px;
-      font-weight:900;
-    }
-    .modal textarea{
-      height:220px;
-      width:100%;
-      padding:12px;
-      font-size:16px;
-      line-height:1.35;
-      border-radius:12px;
-      border:1px solid #d8dbe1;
-      resize:vertical;
-      white-space:pre-wrap;
-    }
-    .modal-row{
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
-      margin-top:12px;
-    }
+    .modal h3 { margin: 0 0 10px 0; }
+    .modal .row { display: grid; grid-template-columns: 180px 1fr; gap: 10px; align-items: center; }
+    .modal textarea { height: 180px; }
 
-    .hint{
-      margin-top:8px;
-      font-size:13px;
-      color:#666;
-    }
-
-    @media (max-width: 900px){
-      .filter-grid{ grid-template-columns:1fr; }
-      .grid-add{ grid-template-columns:1fr; }
-      td.remark-cell{ width:auto; }
-      .topbar .title{ font-size:22px; }
-      .topbar img{ height:40px; }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -218,39 +190,20 @@
   <img src="assets/hanwha.png" alt="한화에너지">
 </header>
 
-<div class="wrap">
-
-  <!-- ✅ 비고 추가 -->
-  <section class="card">
-    <h2>비고 추가</h2>
-
-    <div class="grid-add">
-      <input id="a_no" class="input" placeholder="크레인 번호 (예: 61 / C-014 / TC-61)" />
-
-      <textarea id="a_content" placeholder="비고 내용 (엔터 가능)"></textarea>
-
-      <div style="display:flex; flex-direction:column; gap:10px;">
-        <button onclick="addRemark()">등록</button>
-        <button class="gray" onclick="clearAdd()">초기화</button>
-      </div>
-    </div>
-
-    <div class="hint">
-      • 소형은 숫자만 치면 자동으로 <b>C-</b> 붙음<br>
-      • 타워는 충돌 방지 때문에 <b>TC-</b> 붙여서 입력 추천
-    </div>
-  </section>
+<main class="container">
 
   <!-- 필터 -->
   <section class="card">
     <h2>필터</h2>
-    <div class="filter-grid">
-      <input id="f_no" class="input" placeholder="크레인 번호 (예: C-014 / TC-61)" />
+    <div class="grid">
+      <input id="f_no" class="input" placeholder="크레인 번호 (예: C-014 / TC-001)" />
+
       <select id="f_area" class="input">
         <option value="">지역 전체</option>
         <option value="A">A</option>
         <option value="B">B</option>
       </select>
+
       <select id="f_type" class="input">
         <option value="">타입 전체</option>
         <option value="EOT">EOT</option>
@@ -264,42 +217,61 @@
         <option value="Tower">Tower</option>
       </select>
 
-      <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <button onclick="loadRemarks()">적용</button>
-        <button class="gray" onclick="resetFilters()">초기화</button>
-      </div>
+      <button class="btn" onclick="loadRemarks()">적용</button>
+    </div>
+  </section>
+
+  <!-- 비고 추가(있으면 append update / 없으면 insert) -->
+  <section class="card">
+    <h2>비고 추가</h2>
+    <div class="grid" style="grid-template-columns: 260px 1fr 180px 180px;">
+      <input id="a_no" class="input" placeholder="크레인 번호 입력" />
+      <textarea id="a_content" class="input" placeholder="비고 내용 (엔터 가능)"></textarea>
+      <button class="btn" onclick="addOrAppendRemark()">추가/누적</button>
+      <button class="btn gray" onclick="clearAdd()">입력 초기화</button>
     </div>
   </section>
 
   <!-- 리스트 -->
   <section class="card">
     <h2>리스트</h2>
-    <div style="overflow:auto;">
-      <table>
-        <thead>
-          <tr>
-            <th>번호</th>
-            <th>타입</th>
-            <th>지역</th>
-            <th>비고</th>
-            <th>관리</th>
-          </tr>
-        </thead>
-        <tbody id="remarkList"></tbody>
-      </table>
-    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 140px;">번호</th>
+          <th style="width: 160px;">타입</th>
+          <th style="width: 90px;">지역</th>
+          <th style="width: 220px;">위치</th>
+          <th>비고</th>
+          <th style="width: 160px;">관리</th>
+        </tr>
+      </thead>
+      <tbody id="remarkList"></tbody>
+    </table>
   </section>
 
-</div>
+</main>
 
 <!-- 수정 모달 -->
 <div class="modal-back" id="editBack">
   <div class="modal">
-    <h3 id="editTitle">비고 수정</h3>
-    <textarea id="editText링 240? No keep id editText" placeholder="여기에 비고 입력 (엔터 가능)"></textarea>
-    <div class="modal-row">
-      <button class="gray" onclick="closeEdit()">취소</button>
-      <button onclick="saveEdit()">저장</button>
+    <h3>비고 수정</h3>
+
+    <input type="hidden" id="edit_id" />
+
+    <div class="row" style="margin-bottom: 10px;">
+      <div><b>크레인 번호</b></div>
+      <input id="edit_no" class="input" readonly />
+    </div>
+
+    <div class="row" style="margin-bottom: 12px;">
+      <div><b>비고 내용</b></div>
+      <textarea id="edit_content" class="input"></textarea>
+    </div>
+
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="btn gray" onclick="closeEdit()">닫기</button>
+      <button class="btn" onclick="saveEdit()">저장</button>
     </div>
   </div>
 </div>
@@ -308,205 +280,226 @@
 <script src="app.js"></script>
 
 <script>
-  let _craneMap = {};
-  let _remarksCache = [];
-  let _editingId = null;
-
-  function _upper(v){ return String(v||"").trim().toUpperCase(); }
-  function _isTowerByNo(no){ return _upper(no).startsWith("TC-"); }
-
-  function normalizeCraneNo(input){
-    let v = String(input||"").trim();
-    if (!v) return "";
-
-    // 타워는 TC- 유지
-    if (/^TC-/i.test(v)) return v.toUpperCase();
-
-    // 숫자만이면 소형으로 C- 붙임
-    if (/^\d+$/.test(v)) return `C-${v}`;
-
-    return v;
+  // ===== helpers =====
+  function _normNo(v) {
+    return String(v || "").trim();
+  }
+  function _isTowerNo(no) {
+    return String(no || "").toUpperCase().startsWith("TC-");
   }
 
-  async function _loadCraneMapOnce(){
-    if (Object.keys(_craneMap).length > 0) return;
+  // ===== load + join(관계 없이 2번 조회로 매칭) =====
+  async function loadRemarks() {
+    const tbody = document.getElementById("remarkList");
+    tbody.innerHTML = "";
 
-    const { data, error } = await sb.from("cranes").select("*");
-    if (error) return alert(error.message);
+    const fNo = _normNo(document.getElementById("f_no").value);
+    const fArea = document.getElementById("f_area").value || "";
+    const fType = document.getElementById("f_type").value || "";
 
-    const map = {};
-    (data||[]).forEach(c=>{
-      if (!c || !c.crane_no) return;
-      map[c.crane_no] = c;
-    });
-    _craneMap = map;
-  }
+    // 1) remarks 조회 (존재하는 컬럼만!)
+    const { data: remarks, error: rErr } = await sb
+      .from("remarks")
+      .select("id, crane_no, content, created_at")
+      .order("created_at", { ascending: false });
 
-  async function _fetchRemarksSafe(){
-    let r = await sb.from("remarks").select("*").order("created_at", { ascending: false });
-    if (r.error){
-      console.warn("remarks order(created_at) 실패 -> 무정렬 재시도", r.error);
-      r = await sb.from("remarks").select("*");
+    if (rErr) return alert(rErr.message);
+    if (!remarks) return;
+
+    // 2) cranes 정보 매칭용으로 crane_no 목록 수집
+    const craneNos = Array.from(new Set(remarks.map(r => r.crane_no).filter(Boolean)));
+
+    let craneMap = {};
+    if (craneNos.length > 0) {
+      const { data: cranes, error: cErr } = await sb
+        .from("cranes")
+        .select("crane_no, area, crane_type, group_name")
+        .in("crane_no", craneNos);
+
+      if (!cErr && cranes) {
+        cranes.forEach(c => { craneMap[c.crane_no] = c; });
+      }
     }
-    return r;
-  }
 
-  function clearAdd(){
-    const aNo = document.getElementById("a_no");
-    const aContent = document.getElementById("a_content");
-    if (aNo) aNo.value = "";
-    if (aContent) aContent.value = "";
-  }
+    // 3) 필터 적용 + 렌더
+    const filtered = remarks.filter(r => {
+      const no = _normNo(r.crane_no);
+      if (fNo && !no.toUpperCase().includes(fNo.toUpperCase())) return false;
 
-  async function addRemark(){
-    await _loadCraneMapOnce();
+      const c = craneMap[no] || {};
+      const area = c.area || "";
+      const type = c.crane_type || (_isTowerNo(no) ? "타워" : "");
 
-    let crane_no = normalizeCraneNo(document.getElementById("a_no")?.value);
-    const content = document.getElementById("a_content")?.value ?? "";
-
-    if (!crane_no) return alert("크레인 번호 입력");
-    if (!String(content).trim()) return alert("비고 내용 입력");
-
-    // ⚠️ remarks는 최소 컬럼(crane_no, content)만 넣는다 (다른 컬럼 없어서 400 방지)
-    const { error } = await sb.from("remarks").insert({
-      crane_no,
-      content: content
-    });
-
-    if (error) return alert(error.message);
-
-    clearAdd();
-    loadRemarks();
-  }
-
-  function resetFilters(){
-    const fNo = document.getElementById("f_no");
-    const fArea = document.getElementById("f_area");
-    const fType = document.getElementById("f_type");
-    if (fNo) fNo.value = "";
-    if (fArea) fArea.value = "";
-    if (fType) fType.value = "";
-    loadRemarks();
-  }
-
-  async function loadRemarks(){
-    await _loadCraneMapOnce();
-
-    const { data, error } = await _fetchRemarksSafe();
-    if (error) return alert(error.message);
-
-    _remarksCache = data || [];
-
-    const fNo = document.getElementById("f_no")?.value?.trim() || "";
-    const fArea = document.getElementById("f_area")?.value || "";
-    const fType = document.getElementById("f_type")?.value || "";
-
-    const list = _remarksCache.filter(r=>{
-      const no = r.crane_no || "";
-      const crane = _craneMap[no] || {};
-      let type = crane.crane_type || "";
-      if (!type && _isTowerByNo(no)) type = "타워";
-      const area = crane.area || "";
-
-      if (fNo && !String(no).includes(fNo)) return false;
-      if (fArea && String(area) !== fArea) return false;
-
-      if (fType){
-        const t = String(type||"");
-        if ((fType === "타워" || fType === "Tower")){
-          if (!(t.toLowerCase() === "타워" || t.toLowerCase() === "tower")) return false;
+      if (fArea && area !== fArea) return false;
+      if (fType) {
+        // fType이 "타워/Tower"면 번호(TC-)도 타워로 취급
+        const wantTower = (fType === "타워" || fType === "Tower");
+        if (wantTower) {
+          if (!(type === "타워" || type === "Tower" || _isTowerNo(no))) return false;
         } else {
-          if (t !== fType) return false;
+          if (type !== fType) return false;
         }
       }
       return true;
     });
 
-    const tbody = document.getElementById("remarkList");
-    tbody.innerHTML = "";
+    filtered.forEach(r => {
+      const no = _normNo(r.crane_no);
+      const c = craneMap[no] || {};
+      const area = c.area || "";
+      const type = c.crane_type || (_isTowerNo(no) ? "타워" : "");
+      const loc = c.group_name || "";
 
-    list.forEach(r=>{
-      const no = r.crane_no || "";
-      const crane = _craneMap[no] || {};
-      let type = crane.crane_type || "";
-      if (!type && _isTowerByNo(no)) type = "타워";
-      const area = crane.area || "";
-
-      const content = (r.content ?? r.remark ?? r.comment ?? "").toString();
+      const content = (r.content ?? "").toString();
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${escapeHtml(no)}</td>
-        <td>${escapeHtml(type || "")}</td>
-        <td>${escapeHtml(area || "")}</td>
-        <td class="remark-cell">${escapeHtml(content)}</td>
+        <td>${no}</td>
+        <td>${type}</td>
+        <td>${area}</td>
+        <td>${loc}</td>
+        <td class="td-left">${escapeHtml(content)}</td>
         <td>
-          <button class="btn-mini" onclick="openEdit('${r.id}', '${escapeAttr(no)}')">수정</button>
-          <button class="btn-mini danger" onclick="deleteRemark('${r.id}')">삭제</button>
+          <button class="btn-mini" onclick="openEdit('${r.id}')">수정</button>
+          <button class="btn-mini red" onclick="deleteRemark('${r.id}')">삭제</button>
         </td>
       `;
       tbody.appendChild(tr);
     });
   }
 
-  function openEdit(id, craneNo){
-    _editingId = id;
-    document.getElementById("editTitle").innerText = `비고 수정 - ${craneNo}`;
-    const row = _remarksCache.find(x => String(x.id) === String(id));
-    const content = row ? ((row.content ?? row.remark ?? row.comment ?? "") + "") : "";
-    document.getElementById("editText").value = content;
-    document.getElementById("editBack").style.display = "flex";
-    document.getElementById("editText").focus();
+  // ===== add or append(update) =====
+  async function addOrAppendRemark() {
+    const no = _normNo(document.getElementById("a_no").value);
+    const text = (document.getElementById("a_content").value || "").trim();
+
+    if (!no) return alert("크레인 번호 입력");
+    if (!text) return alert("비고 내용 입력");
+
+    // 기존 1건 찾기(최신 1건)
+    const { data: exist, error: fErr } = await sb
+      .from("remarks")
+      .select("id, content, created_at")
+      .eq("crane_no", no)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (fErr) return alert(fErr.message);
+
+    if (exist && exist.length > 0) {
+      const cur = (exist[0].content ?? "").toString().trim();
+      const merged = cur ? (cur + "\n" + text) : text;
+
+      const { error: uErr } = await sb
+        .from("remarks")
+        .update({ content: merged })
+        .eq("id", exist[0].id);
+
+      if (uErr) return alert(uErr.message);
+    } else {
+      const { error: iErr } = await sb
+        .from("remarks")
+        .insert({ crane_no: no, content: text });
+
+      if (iErr) return alert(iErr.message);
+    }
+
+    clearAdd();
+    loadRemarks();
   }
 
-  function closeEdit(){
-    _editingId = null;
-    document.getElementById("editBack").style.display = "none";
+  function clearAdd() {
+    document.getElementById("a_no").value = "";
+    document.getElementById("a_content").value = "";
   }
 
-  async function saveEdit(){
-    if (!_editingId) return;
+  // ===== edit modal =====
+  async function openEdit(id) {
+    // ✅ 여기서 null 나는 문제 방지: 요소 존재 체크
+    const back = document.getElementById("editBack");
+    const eId = document.getElementById("edit_id");
+    const eNo = document.getElementById("edit_no");
+    const eContent = document.getElementById("edit_content");
+    if (!back || !eId || !eNo || !eContent) return alert("수정 UI(id) 누락: remarks.html 확인");
 
-    const text = document.getElementById("editText").value ?? "";
-    const { error } = await sb.from("remarks").update({ content: text }).eq("id", _editingId);
+    const { data, error } = await sb
+      .from("remarks")
+      .select("id, crane_no, content")
+      .eq("id", id)
+      .single();
+
+    if (error) return alert(error.message);
+    if (!data) return alert("데이터 없음");
+
+    eId.value = data.id;
+    eNo.value = data.crane_no || "";
+    eContent.value = (data.content ?? "").toString();
+
+    back.style.display = "flex";
+    eContent.focus();
+  }
+
+  function closeEdit() {
+    const back = document.getElementById("editBack");
+    if (back) back.style.display = "none";
+  }
+
+  async function saveEdit() {
+    const id = document.getElementById("edit_id").value;
+    const content = document.getElementById("edit_content").value || "";
+
+    if (!id) return alert("수정 대상 id 없음");
+
+    const { error } = await sb
+      .from("remarks")
+      .update({ content })
+      .eq("id", id);
+
     if (error) return alert(error.message);
 
     closeEdit();
     loadRemarks();
   }
 
-  async function deleteRemark(id){
-    if (!confirm("이 비고를 삭제할까요?")) return;
+  async function deleteRemark(id) {
+    if (!confirm("정말 삭제할까요?")) return;
+
     const { error } = await sb.from("remarks").delete().eq("id", id);
     if (error) return alert(error.message);
+
     loadRemarks();
   }
 
-  function escapeHtml(s){
-    return String(s||"")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-  function escapeAttr(s){
-    return String(s||"").replaceAll("'","&#039;").replaceAll('"',"&quot;");
+  // XSS 방지(비고 표시용)
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
   document.addEventListener("DOMContentLoaded", () => {
     loadRemarks();
+
+    // 모달 밖 클릭하면 닫기
+    const back = document.getElementById("editBack");
+    if (back) {
+      back.addEventListener("click", (e) => {
+        if (e.target === back) closeEdit();
+      });
+    }
   });
 
+  // 전역 바인딩(안전)
   window.loadRemarks = loadRemarks;
-  window.resetFilters = resetFilters;
-  window.addRemark = addRemark;
-  window.clearAdd = clearAdd;
-
+  window.addOrAppendRemark = addOrAppendRemark;
   window.openEdit = openEdit;
   window.closeEdit = closeEdit;
   window.saveEdit = saveEdit;
   window.deleteRemark = deleteRemark;
+  window.clearAdd = clearAdd;
 </script>
 
 </body>
