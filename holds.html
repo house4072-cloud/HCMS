@@ -51,16 +51,13 @@
 
   <main class="container">
 
-    <!-- 필터 -->
     <div class="btn-row" style="margin:12px 0; gap:10px; display:flex; flex-wrap:wrap;">
-  <button class="btn" onclick="printFiltered()">필터결과 프린트</button>
-  <button class="btn" onclick="printSelected()">선택 프린트</button>
-
-  <button class="btn ghost" onclick="selectAllRows(true)">전체 선택</button>
-  <button class="btn ghost" onclick="selectAllRows(false)">선택 해제</button>
+  <button class="btn" onclick="printFiltered_holds()">필터결과 프린트</button>
+  <button class="btn" onclick="printSelected_holds()">선택 프린트</button>
+  <button class="btn ghost" onclick="selectAllRows_holds(true)">전체 선택</button>
+  <button class="btn ghost" onclick="selectAllRows_holds(false)">선택 해제</button>
 </div>
 
-    <section class="card no-print">
       <h2>필터</h2>
       <div class="btn-row" style="gap:12px; align-items:center;">
         <input id="f_no" class="input" placeholder="크레인 번호 (예: C-203 / TC-61)" style="min-width:260px;">
@@ -296,176 +293,156 @@
       loadHolds();
     });
   </script>
-  <script>
+ <script>
 /* =========================
-   holds.html 전용 프린트 패치
-   - 기존 로직/표 생성 방식 몰라도 동작(표 DOM 기반)
-   - 필터 결과 전체 프린트 / 체크된 행만 프린트
+   holds.html 프린트 패치 (app.js 수정 X)
+   - 보류/미완 리스트용
 ========================= */
+(function(){
+  const TABLE_ID = "holdTable"; // ✅ 너가 테이블에 id 안 달았으면 자동으로 첫 table 잡음
+  const TITLE_FILTER = "HCMS 보류/미완 리스트 (필터결과)";
+  const TITLE_SELECTED = (n)=>`HCMS 보류/미완 리스트 (선택 ${n}건)`;
 
-function _getHoldTable() {
-  // 1순위: id가 있으면 그걸 쓰고, 없으면 페이지 첫 table
-  return document.getElementById("holdTable") || document.querySelector("table");
-}
-
-function _getTbody() {
-  const table = _getHoldTable();
-  return table ? table.querySelector("tbody") : null;
-}
-
-function ensurePrintCheckboxes() {
-  const table = _getHoldTable();
-  const tbody = _getTbody();
-  if (!table || !tbody) return;
-
-  // THEAD 없으면 생성
-  let thead = table.querySelector("thead");
-  if (!thead) {
-    thead = document.createElement("thead");
-    table.insertBefore(thead, table.firstChild);
-    const tr = document.createElement("tr");
-    // tbody 첫 행 기준으로 헤더 칸 수 맞춤(없으면 1칸)
-    const colCount = (tbody.querySelector("tr")?.children?.length || 1);
-    for (let i = 0; i < colCount; i++) {
-      const th = document.createElement("th");
-      th.textContent = "";
-      tr.appendChild(th);
-    }
-    thead.appendChild(tr);
+  function _getTable(){
+    return document.getElementById(TABLE_ID) || document.querySelector("table");
+  }
+  function _getTbody(){
+    const t=_getTable(); return t ? t.querySelector("tbody") : null;
   }
 
-  // 헤더 첫칸에 전체체크박스가 없으면 삽입
-  const headRow = thead.querySelector("tr");
-  if (headRow) {
-    const firstTH = headRow.children[0];
-    if (!firstTH || !firstTH.querySelector("input#printChkAll")) {
-      // 첫칸에 "선택" 헤더 + 전체 체크
-      if (firstTH) {
-        firstTH.innerHTML = `<input id="printChkAll" type="checkbox" onchange="selectAllRows(this.checked)" />`;
-      } else {
-        const th = document.createElement("th");
-        th.innerHTML = `<input id="printChkAll" type="checkbox" onchange="selectAllRows(this.checked)" />`;
-        headRow.insertBefore(th, headRow.firstChild);
+  function ensureCheckboxes(){
+    const table=_getTable(), tbody=_getTbody();
+    if(!table || !tbody) return;
+
+    let thead = table.querySelector("thead");
+    if(!thead){
+      thead=document.createElement("thead");
+      table.insertBefore(thead, table.firstChild);
+      const tr=document.createElement("tr");
+      const colCount=(tbody.querySelector("tr")?.children?.length||1);
+      for(let i=0;i<colCount;i++){ const th=document.createElement("th"); th.textContent=""; tr.appendChild(th); }
+      thead.appendChild(tr);
+    }
+
+    const headRow = thead.querySelector("tr");
+    if(headRow){
+      const firstTH=headRow.children[0];
+      if(firstTH && !firstTH.querySelector("#printChkAll_holds")){
+        firstTH.innerHTML = `<input id="printChkAll_holds" type="checkbox" onchange="selectAllRows_holds(this.checked)" />`;
       }
     }
+
+    [...tbody.querySelectorAll("tr")].forEach(tr=>{
+      const firstTD=tr.children[0];
+      if(!firstTD) return;
+      if(firstTD.querySelector && firstTD.querySelector("input.rowChk_holds")) return;
+
+      const td=document.createElement("td");
+      td.style.width="60px";
+      td.innerHTML=`<input type="checkbox" class="rowChk_holds" />`;
+      tr.insertBefore(td, tr.firstChild);
+    });
   }
 
-  // 각 row 첫칸에 체크박스 없으면 prepend
-  [...tbody.querySelectorAll("tr")].forEach(tr => {
-    const firstTD = tr.children[0];
-    if (!firstTD) return;
+  window.selectAllRows_holds = function(checked){
+    const tbody=_getTbody(); if(!tbody) return;
+    tbody.querySelectorAll("input.rowChk_holds").forEach(chk=>chk.checked=!!checked);
+    const all=document.getElementById("printChkAll_holds");
+    if(all) all.checked=!!checked;
+  }
 
-    // 이미 체크칸이면 스킵
-    if (firstTD.querySelector && firstTD.querySelector("input.rowChk")) return;
+  function _stripColumns(cloneTable){
+    // ✅ 체크박스 칸 + '관리' 칸 제거
+    const ths=[...cloneTable.querySelectorAll("thead th")];
+    let manageIdx = -1;
+    ths.forEach((th,i)=>{
+      const t=(th.textContent||"").trim();
+      if(t==="관리" || t.toLowerCase()==="actions") manageIdx=i;
+    });
 
-    const td = document.createElement("td");
-    td.style.width = "60px";
-    td.innerHTML = `<input type="checkbox" class="rowChk" />`;
+    function removeCol(idx){
+      if(idx<0) return;
+      cloneTable.querySelectorAll("tr").forEach(tr=>{
+        if(tr.children[idx]) tr.children[idx].remove();
+      });
+    }
 
-    tr.insertBefore(td, tr.firstChild);
-  });
-}
+    // 0번(체크) 제거
+    removeCol(0);
+    // 관리 칸 제거 (체크칸 제거 후 인덱스 1 줄어듦)
+    if(manageIdx>=0) removeCol(manageIdx-1);
+  }
 
-function selectAllRows(checked) {
-  const tbody = _getTbody();
-  if (!tbody) return;
-  tbody.querySelectorAll("input.rowChk").forEach(chk => chk.checked = !!checked);
+  function _buildPrintHTML(title, tableHTML){
+    const now=new Date();
+    const stamp=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
 
-  const all = document.getElementById("printChkAll");
-  if (all) all.checked = !!checked;
-}
-
-function _buildPrintHTML(title, tableHTML) {
-  const now = new Date();
-  const stamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
-
-  return `
-<!doctype html>
-<html lang="ko">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+    return `<!doctype html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${title}</title>
 <style>
-  body{ font-family: Arial, sans-serif; margin: 24px; color:#111; }
-  .hdr{ display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:14px; }
-  .hdr .t{ font-size:20px; font-weight:900; }
-  .hdr .d{ font-size:12px; color:#666; font-weight:700; }
-  table{ width:100%; border-collapse:collapse; font-size:12px; }
-  th,td{ border:1px solid #ddd; padding:8px; text-align:center; }
-  th{ background:#f2f2f2; font-weight:900; }
-  /* 체크박스 칸 숨김 */
-  th:first-child, td:first-child{ display:none; }
-</style>
-</head>
-<body>
-  <div class="hdr">
-    <div class="t">${title}</div>
-    <div class="d">${stamp}</div>
-  </div>
-  ${tableHTML}
-</body>
-</html>`;
-}
+body{font-family:Arial,sans-serif;margin:24px;color:#111;}
+.hdr{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px;}
+.hdr .t{font-size:20px;font-weight:900;}
+.hdr .d{font-size:12px;color:#666;font-weight:700;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th,td{border:1px solid #ddd;padding:8px;text-align:center;}
+th{background:#f2f2f2;font-weight:900;}
+/* 사유/코멘트가 길면 줄바꿈 */
+td{white-space:pre-wrap; word-break:break-word;}
+</style></head><body>
+<div class="hdr"><div class="t">${title}</div><div class="d">${stamp}</div></div>
+${tableHTML}
+</body></html>`;
+  }
 
-function printFiltered() {
-  ensurePrintCheckboxes();
+  function _openPrint(html){
+    const w=window.open("","_blank");
+    w.document.open(); w.document.write(html); w.document.close();
+    w.focus(); w.print();
+  }
 
-  const table = _getHoldTable();
-  if (!table) return alert("표(table)를 찾지 못했습니다.");
+  window.printFiltered_holds = function(){
+    ensureCheckboxes();
+    const table=_getTable();
+    if(!table) return alert("표(table)를 찾지 못했습니다.");
 
-  // 현재 화면에 보이는 그대로 프린트
-  const title = "HCMS 보류/미완 리스트 (필터결과)";
-  const html = _buildPrintHTML(title, table.outerHTML);
+    const clone=table.cloneNode(true);
+    _stripColumns(clone);
 
-  const w = window.open("", "_blank");
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
-  w.focus();
-  w.print();
-}
+    _openPrint(_buildPrintHTML(TITLE_FILTER, clone.outerHTML));
+  }
 
-function printSelected() {
-  ensurePrintCheckboxes();
+  window.printSelected_holds = function(){
+    ensureCheckboxes();
+    const table=_getTable(), tbody=_getTbody();
+    if(!table||!tbody) return alert("표(table)를 찾지 못했습니다.");
 
-  const table = _getHoldTable();
-  const tbody = _getTbody();
-  if (!table || !tbody) return alert("표(table)를 찾지 못했습니다.");
+    const selected=[...tbody.querySelectorAll("tr")]
+      .filter(tr=>tr.querySelector("input.rowChk_holds")?.checked);
 
-  const selectedRows = [...tbody.querySelectorAll("tr")].filter(tr => tr.querySelector("input.rowChk")?.checked);
-  if (selectedRows.length === 0) return alert("선택된 항목이 없습니다.");
+    if(selected.length===0) return alert("선택된 항목이 없습니다.");
 
-  // 헤더/바디 재구성
-  const cloneTable = table.cloneNode(false);
-  const thead = table.querySelector("thead")?.cloneNode(true);
-  const newTbody = document.createElement("tbody");
-  selectedRows.forEach(tr => newTbody.appendChild(tr.cloneNode(true)));
+    const cloneTable=table.cloneNode(false);
+    const thead=table.querySelector("thead")?.cloneNode(true);
+    const newTbody=document.createElement("tbody");
+    selected.forEach(tr=>newTbody.appendChild(tr.cloneNode(true)));
 
-  if (thead) cloneTable.appendChild(thead);
-  cloneTable.appendChild(newTbody);
+    if(thead) cloneTable.appendChild(thead);
+    cloneTable.appendChild(newTbody);
 
-  const title = `HCMS 보류/미완 리스트 (선택 ${selectedRows.length}건)`;
-  const html = _buildPrintHTML(title, cloneTable.outerHTML);
+    _stripColumns(cloneTable);
 
-  const w = window.open("", "_blank");
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
-  w.focus();
-  w.print();
-}
+    _openPrint(_buildPrintHTML(TITLE_SELECTED(selected.length), cloneTable.outerHTML));
+  }
 
-// ✅ rows가 새로 렌더링돼도 체크박스 자동 삽입
-document.addEventListener("DOMContentLoaded", () => {
-  ensurePrintCheckboxes();
-
-  const tbody = _getTbody();
-  if (!tbody) return;
-
-  const obs = new MutationObserver(() => ensurePrintCheckboxes());
-  obs.observe(tbody, { childList: true, subtree: true });
-});
+  document.addEventListener("DOMContentLoaded", ()=>{
+    ensureCheckboxes();
+    const tbody=_getTbody(); if(!tbody) return;
+    const obs=new MutationObserver(()=>ensureCheckboxes());
+    obs.observe(tbody,{childList:true,subtree:true});
+  });
+})();
 </script>
 
 </body>
