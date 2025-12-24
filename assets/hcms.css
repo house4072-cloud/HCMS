@@ -287,3 +287,21 @@ th{
   .schedule-wrap{ grid-template-columns: 1fr; }
   table{ min-width: 720px; }
 }
+/* ===== 워터마크 ===== */
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+
+  background-image: url("assets/watermark_hope.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 520px auto;
+
+  opacity: 0.06; /* 더 연하게: 0.03~0.08 사이로 조절 */
+}
+
+/* 워터마크 위에 컨텐츠가 오도록 */
+.topbar, .container { position: relative; z-index: 1; }
