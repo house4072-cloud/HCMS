@@ -1,47 +1,292 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <link rel="stylesheet" href="assets/hcms.css">
 <head>
   <meta charset="UTF-8" />
-  <title>HCMS | 보류 리스트</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HCMS | 보류/미완 리스트</title>
 
-  <!-- Supabase SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- app.js (module ❌) -->
-  <script src="app.js"></script>
+  <link rel="stylesheet" href="assets/hcms.css">
 
   <style>
-    body { font-family: Arial; padding: 20px; font-size: 17px; }
-    h1 { margin-bottom: 20px; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    .wm{
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: url("assets/watermark_hope.png") center/480px no-repeat;
+      opacity: 0.06;
+      z-index: 0;
     }
+    main{ position: relative; z-index: 1; }
 
-    th, td {
-      border: 1px solid #ccc;
-      padding: 14px;
-      text-align: center;
+    .reason-cell{
+      text-align:left;
+      white-space: pre-wrap;
+      line-height: 1.35;
+      font-size: 15px;
+      padding: 14px 12px;
+      min-width: 520px;
     }
+    table{ min-width: 1200px; }
 
-    tr { height: 50px; }
-    th { background: #f4f4f4; }
+    /* 프린트: 필터/버튼 숨김 */
+    @media print{
+      .no-print{ display:none !important; }
+      .card{ box-shadow:none !important; }
+      body{ background:#fff !important; }
+      .wm{ display:none !important; }
+      .topbar{ position: static !important; box-shadow:none !important; }
+      table{ min-width: auto !important; }
+    }
   </style>
 </head>
+
 <body>
+  <div class="wm"></div>
 
-<h1>보류 리스트</h1>
+  <header class="topbar">
+    <img src="assets/hope.png" alt="희망이엔지">
+    <div class="title">보류 리스트</div>
+    <img src="assets/hanwha.png" alt="한화에너지">
+  </header>
 
-<table>
-  <thead>
-    <tr>
-      <th>크레인 번호</th>
-      <th>지역</th>
-      <th>보류 사유</th>
-      <th>보류일</th>
-    </tr>
-  </thead>
-  <tbody id="holdList"></tbody>
-</
+  <main class="container">
+
+    <!-- 필터 -->
+    <section class="card no-print">
+      <h2>필터</h2>
+      <div class="btn-row" style="gap:12px; align-items:center;">
+        <input id="f_no" class="input" placeholder="크레인 번호 (예: C-203 / TC-61)" style="min-width:260px;">
+
+        <select id="f_area" class="input" style="min-width:180px;">
+          <option value="">지역 전체</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+        </select>
+
+        <select id="f_type" class="input" style="min-width:220px;">
+          <option value="">타입 전체</option>
+          <option value="EOT">EOT</option>
+          <option value="Suspension">Suspension</option>
+          <option value="Gantry">Gantry</option>
+          <option value="Post">Post</option>
+          <option value="Wall">Wall</option>
+          <option value="Monorail">Monorail</option>
+          <option value="Service Crane">Service Crane</option>
+          <option value="타워">타워</option>
+        </select>
+
+        <select id="f_status" class="input" style="min-width:180px;">
+          <option value="">상태 전체</option>
+          <option value="보류">보류</option>
+          <option value="미완">미완</option>
+        </select>
+
+        <input id="f_reason" class="input" placeholder="사유(내용 포함 검색)" style="min-width:260px;">
+
+        <button class="btn" id="btnApply">적용</button>
+        <button class="btn ghost" id="btnReset">초기화</button>
+        <button class="btn" id="btnPrint">프린트</button>
+      </div>
+
+      <div class="muted" style="margin-top:10px;">
+        · 이 리스트는 <b>보류/미완</b>만 표시됩니다. (미완료 표기도 포함 처리)<br/>
+        · 사유는 <b>cranes.hold_reason</b> 우선, 없으면 <b>inspections의 최신 comment</b>로 보정합니다.
+      </div>
+    </section>
+
+    <!-- 리스트 -->
+    <section class="card">
+      <h2>리스트</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:140px;">크레인번호</th>
+              <th style="width:120px;">타입</th>
+              <th style="width:90px;">지역</th>
+              <th style="width:240px;">위치</th>
+              <th style="width:110px;">상태</th>
+              <th>사유</th>
+            </tr>
+          </thead>
+          <tbody id="holdList"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+
+  <script>
+    // ===== 내부 캐시 =====
+    let rows = []; // 화면에 뿌릴 최종 row
+
+    function normStatus(s){
+      const v = String(s || "").trim();
+      if (v === "미완료") return "미완";
+      return v;
+    }
+    function isTowerNo(no){
+      return String(no || "").toUpperCase().startsWith("TC-");
+    }
+
+    function escapeHtml(str){
+      return String(str || "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;");
+    }
+
+    function matchesFilter(r){
+      const fNo = document.getElementById("f_no").value.trim();
+      const fArea = document.getElementById("f_area").value;
+      const fType = document.getElementById("f_type").value;
+      const fStatus = document.getElementById("f_status").value;
+      const fReason = document.getElementById("f_reason").value.trim();
+
+      if (fNo && !String(r.crane_no).toUpperCase().includes(fNo.toUpperCase())) return false;
+      if (fArea && String(r.area || "") !== fArea) return false;
+
+      if (fType) {
+        const t = r.crane_type || (isTowerNo(r.crane_no) ? "타워" : "");
+        if (t !== fType) return false;
+      }
+
+      if (fStatus && normStatus(r.inspection_status) !== fStatus) return false;
+
+      if (fReason) {
+        const reason = String(r.reason || "");
+        if (!reason.toUpperCase().includes(fReason.toUpperCase())) return false;
+      }
+
+      return true;
+    }
+
+    function render(){
+      const tbody = document.getElementById("holdList");
+      tbody.innerHTML = "";
+
+      const view = rows.filter(matchesFilter);
+
+      view.forEach(r => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(r.crane_no)}</td>
+          <td>${escapeHtml(r.crane_type || (isTowerNo(r.crane_no) ? "타워" : ""))}</td>
+          <td>${escapeHtml(r.area || "")}</td>
+          <td>${escapeHtml(r.location || "")}</td>
+          <td><b>${escapeHtml(normStatus(r.inspection_status))}</b></td>
+          <td class="reason-cell">${escapeHtml(r.reason || "")}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // inspections에서 최신 comment 맵 만들기(관계조인 X)
+    async function loadLatestInspectionComments(targetNos){
+      const map = new Map();
+      if (!targetNos.length) return map;
+
+      // inspections 전부를 조인/관계 없이 가져와서, 최신 id순으로 먼저 매칭되는 comment만 채움
+      // (range 크게)
+      const { data, error } = await sb
+        .from("inspections")
+        .select("id,crane_no,result,comment,inspection_date")
+        .order("id", { ascending: false })
+        .range(0, 5000);
+
+      if (error) {
+        console.warn("inspections 로드 실패(사유 보정 일부 누락 가능):", error.message);
+        return map;
+      }
+
+      const set = new Set(targetNos.map(x => String(x)));
+      for (const it of (data || [])) {
+        const no = String(it.crane_no || "");
+        if (!set.has(no)) continue;
+
+        // 보류/미완 케이스만 사유로 사용
+        const res = normStatus(it.result);
+        if (res !== "보류" && res !== "미완") continue;
+
+        if (!map.has(no)) {
+          const c = String(it.comment || "").trim();
+          if (c) map.set(no, c);
+        }
+        if (map.size === set.size) break;
+      }
+      return map;
+    }
+
+    async function loadHolds(){
+      // 보류/미완만
+      const { data, error } = await sb
+        .from("cranes")
+        .select("id,crane_no,area,crane_type,group_name,inspection_status,hold_reason")
+        .in("inspection_status", ["보류","미완","미완료"]);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      const list = (data || []).map(c => ({
+        id: c.id,
+        crane_no: c.crane_no,
+        area: c.area || "",
+        crane_type: c.crane_type || "",
+        location: c.group_name || "",
+        inspection_status: normStatus(c.inspection_status),
+        hold_reason: c.hold_reason || ""
+      }));
+
+      // 사유 보정(보류=hold_reason 우선 / 미완=inspections comment 우선)
+      const nos = list.map(x => x.crane_no);
+      const latestMap = await loadLatestInspectionComments(nos);
+
+      rows = list.map(x => {
+        let reason = "";
+
+        // 보류면 hold_reason 우선
+        if (x.inspection_status === "보류") {
+          reason = x.hold_reason || latestMap.get(x.crane_no) || "";
+        } else {
+          // 미완이면 inspections comment 우선(없으면 hold_reason)
+          reason = latestMap.get(x.crane_no) || x.hold_reason || "";
+        }
+
+        return { ...x, reason };
+      });
+
+      // 보기 좋게: 보류 먼저, 그 다음 미완 / 번호순
+      rows.sort((a,b) => {
+        const aa = (a.inspection_status === "보류") ? 0 : 1;
+        const bb = (b.inspection_status === "보류") ? 0 : 1;
+        if (aa !== bb) return aa - bb;
+        return String(a.crane_no).localeCompare(String(b.crane_no));
+      });
+
+      render();
+    }
+
+    function resetFilter(){
+      document.getElementById("f_no").value = "";
+      document.getElementById("f_area").value = "";
+      document.getElementById("f_type").value = "";
+      document.getElementById("f_status").value = "";
+      document.getElementById("f_reason").value = "";
+      render();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("btnApply").addEventListener("click", render);
+      document.getElementById("btnReset").addEventListener("click", resetFilter);
+      document.getElementById("btnPrint").addEventListener("click", () => window.print());
+      loadHolds();
+    });
+  </script>
+</body>
+</html>
