@@ -106,17 +106,24 @@
       .sc-sub{ margin-top:4px; color:#6b7280; font-weight:700; }
       .sc-btns{ margin-top:10px; display:flex; gap:8px; }
 
-      /* ✅ 여기만 수정: 완료/보류 버튼 색상 적용 */
+      /* ✅ 여기만 수정: 완료=주황 / 보류=빨강 */
       .sc-btns button{
-        height:40px;
-        padding:0 12px;
-        border-radius:10px;
-        border:0;
-        cursor:pointer;
-        font-weight:900;
-        background: var(--hcms-orange);
-        color:#000;
+        height:40px !important;
+        padding:0 12px !important;
+        border-radius:10px !important;
+        border:0 !important;
+        cursor:pointer !important;
+        font-weight:900 !important;
       }
+      .sc-btns button:nth-child(1){
+        background:#ff8a00 !important;
+        color:#000 !important;
+      }
+      .sc-btns button:nth-child(2){
+        background:#e54848 !important;
+        color:#fff !important;
+      }
+
       .sc-btns button:hover{ filter: brightness(.98); }
       .sc-btns button:active{ transform: translateY(1px); }
     </style>
