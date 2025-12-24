@@ -7,6 +7,30 @@
 
   <!-- 공용 CSS -->
   <link rel="stylesheet" href="assets/hcms.css">
+<style>
+  /* ✅ 워터마크가 안 보일 때 강제 적용 패치 */
+  body{ position: relative; }
+
+  body::before{
+    content:"";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+
+    background-image: url("assets/watermark_hope.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 520px auto;
+    opacity: 0.06;
+  }
+
+  /* ✅ 표/카드가 워터마크 위로 오게 */
+  .topbar, .container, main, .card, .table-wrap, table{
+    position: relative;
+    z-index: 1;
+  }
+</style>
 
 </head>
 
