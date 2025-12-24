@@ -103,7 +103,7 @@ function ensureLoginOverlay() {
     </div>
 
     <div style="margin-top:12px;color:#111;font-weight:800;">비밀번호(PIN) 입력</div>
-    <input id="hcms_pin" type="password" inputmode="numeric" placeholder="예: 1234
+    <input id="hcms_pin" type="password" inputmode="numeric" placeholder="예: 1234"
       style="margin-top:8px;width:100%;height:52px;font-size:18px;padding:0 14px;border-radius:12px;border:1px solid #ddd;outline:none;" />
 
     <div style="margin-top:10px;font-size:13px;color:#444;line-height:1.35;">
