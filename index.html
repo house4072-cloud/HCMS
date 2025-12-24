@@ -105,12 +105,20 @@
       .sc-title{ font-weight:900; font-size:18px; }
       .sc-sub{ margin-top:4px; color:#6b7280; font-weight:700; }
       .sc-btns{ margin-top:10px; display:flex; gap:8px; }
+
+      /* ✅ 여기만 수정: 완료/보류 버튼 색상 적용 */
       .sc-btns button{
-        height:40px; padding:0 12px; border-radius:10px;
-        border:1px solid var(--hcms-line);
-        background:#fff; cursor:pointer; font-weight:800;
+        height:40px;
+        padding:0 12px;
+        border-radius:10px;
+        border:0;
+        cursor:pointer;
+        font-weight:900;
+        background: var(--hcms-orange);
+        color:#000;
       }
-      .sc-btns button:hover{ background:#f9fafb; }
+      .sc-btns button:hover{ filter: brightness(.98); }
+      .sc-btns button:active{ transform: translateY(1px); }
     </style>
   </section>
 
