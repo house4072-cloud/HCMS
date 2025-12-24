@@ -14,8 +14,8 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ===== [2] 계정/핀(비번) 설정 =====
 const HCMS_ROLE_EMAIL = {
   viewer: "house4077@gmail.com",
-  admin: "house57589@gmail.com",
-  master: "sgim5376@gmail.com",
+  admin: "sgim5376@gmail.com",
+  master: "house57589@gmail.com",
 };
 
 const HCMS_PINS_DEFAULT = {
@@ -103,7 +103,7 @@ function ensureLoginOverlay() {
     </div>
 
     <div style="margin-top:12px;color:#111;font-weight:800;">비밀번호(PIN) 입력</div>
-    <input id="hcms_pin" type="password" inputmode="numeric" placeholder="예: 0000 / 0071 / 0823"
+    <input id="hcms_pin" type="password" inputmode="numeric" placeholder="예: 1234
       style="margin-top:8px;width:100%;height:52px;font-size:18px;padding:0 14px;border-radius:12px;border:1px solid #ddd;outline:none;" />
 
     <div style="margin-top:10px;font-size:13px;color:#444;line-height:1.35;">
