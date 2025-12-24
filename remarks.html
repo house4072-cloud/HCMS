@@ -9,498 +9,519 @@
   <link rel="stylesheet" href="assets/hcms.css">
 
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #e9ecef;
-      color: #111;
-    }
-
-    /* 상단바(메인과 동일 톤) */
-    .topbar {
-      position: relative;
-      background: #ff8a00;
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .topbar img { height: 44px; object-fit: contain; }
-    .topbar .title {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 28px;
-      font-weight: 900;
-      color: #000;
-      white-space: nowrap;
-    }
-
-    .container {
-      max-width: 1600px;
-      margin: auto;
-      padding: 24px;
-      position: relative;
-    }
-
-    /* 워터마크(파일은 assets/watermark_hope.png 기준) */
-    .container::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: url("assets/watermark_hope.png") center/520px no-repeat;
-      opacity: 0.06;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .card {
-      position: relative;
-      z-index: 1;
-      background: #f7f8fa;
-      border-radius: 16px;
-      padding: 18px;
-      margin-bottom: 18px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-      border: 1px solid #dee2e6;
-    }
-
-    h2 {
-      margin: 0 0 14px 0;
-      font-size: 22px;
-      color: #111;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 200px 260px 180px;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .input, select, textarea {
-      width: 100%;
-      height: 48px;
-      font-size: 16px;
-      padding: 0 12px;
-      border-radius: 10px;
-      border: 1px solid #cfd4da;
-      background: #fff;
-      box-sizing: border-box;
-    }
-
-    textarea.input {
-      height: 90px;
-      padding: 10px 12px;
-      resize: vertical;
-      line-height: 1.35;
-    }
-
-    .btn {
-      height: 48px;
-      padding: 0 16px;
-      font-size: 16px;
-      font-weight: 800;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-      background: #ff8a00;
-      color: #000;
-      white-space: nowrap;
-    }
-    .btn.gray { background: #adb5bd; color: #111; }
-    .btn.red { background: #ff4444; color: #fff; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 15px;
-      background: #fff;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    th, td {
-      border: 1px solid #dee2e6;
-      padding: 12px;
-      text-align: center;
-      vertical-align: top;
-    }
-    th {
-      background: #fff3e0;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-
-    .td-left {
-      text-align: left;
-      white-space: pre-wrap;   /* ✅ 엔터/줄바꿈 보존 */
-      word-break: break-word;
-    }
-
-    .btn-mini {
-      height: 36px;
-      font-size: 14px;
-      padding: 0 10px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-weight: 800;
-      margin: 2px;
-      background: #ff8a00;
-      color: #000;
-    }
-    .btn-mini.gray { background: #adb5bd; }
-    .btn-mini.red { background: #ff4444; color: #fff; }
-
-    /* 수정 모달 */
-    .modal-back {
-      display: none;
+    /* 워터마크(파일명 맞춰서 사용) */
+    .wm {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.45);
-      z-index: 9999;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
+      pointer-events: none;
+      background: url("assets/watermark_hope.png") center/480px no-repeat;
+      opacity: 0.06;
+      z-index: 0;
     }
-    .modal {
-      width: min(900px, 96vw);
-      background: #fff;
-      border-radius: 14px;
-      padding: 16px;
-      border: 1px solid #dee2e6;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.22);
-    }
-    .modal h3 { margin: 0 0 10px 0; }
-    .modal .row { display: grid; grid-template-columns: 180px 1fr; gap: 10px; align-items: center; }
-    .modal textarea { height: 180px; }
+    main { position: relative; z-index: 1; }
 
-    @media (max-width: 900px) {
-      .grid { grid-template-columns: 1fr; }
+    /* 비고 칸 크게 */
+    .remark-cell{
+      text-align: left;
+      white-space: pre-wrap; /* 엔터 그대로 표시 */
+      line-height: 1.35;
+      font-size: 15px;
+      padding: 14px 12px;
+      min-width: 520px;
     }
+
+    .grid-6{
+      display:grid;
+      grid-template-columns: 1.1fr 0.8fr 1fr 1fr 1.6fr 1.2fr;
+      gap: 12px;
+      align-items:center;
+    }
+
+    textarea.input{
+      height: 120px;          /* 높이 */
+      padding: 12px 14px;     /* textarea는 상하패딩 필요 */
+      resize: vertical;
+    }
+
+    /* 테이블 최소폭 */
+    table{ min-width: 1200px; }
   </style>
 </head>
 
 <body>
+  <div class="wm"></div>
 
-<header class="topbar">
-  <img src="assets/hope.png" alt="희망이엔지">
-  <div class="title">비고 리스트</div>
-  <img src="assets/hanwha.png" alt="한화에너지">
-</header>
+  <header class="topbar">
+    <img src="assets/hope.png" alt="희망이엔지">
+    <div class="title">비고 리스트</div>
+    <img src="assets/hanwha.png" alt="한화에너지">
+  </header>
 
-<main class="container">
+  <main class="container">
 
-  <!-- 필터 -->
-  <section class="card">
-    <h2>필터</h2>
-    <div class="grid">
-      <input id="f_no" class="input" placeholder="크레인 번호 (예: C-014 / TC-001)" />
+    <!-- ===== 비고 추가/누적 ===== -->
+    <section class="card">
+      <h2>비고 추가/누적</h2>
 
-      <select id="f_area" class="input">
-        <option value="">지역 전체</option>
-        <option value="A">A</option>
-        <option value="B">B</option>
-      </select>
+      <div class="grid-6" style="margin-bottom:12px;">
+        <div class="muted" style="font-weight:800;">크레인 번호</div>
+        <div class="muted" style="font-weight:800;">지역</div>
+        <div class="muted" style="font-weight:800;">타입</div>
+        <div class="muted" style="font-weight:800;">위치</div>
+        <div class="muted" style="font-weight:800;">비고 입력</div>
+        <div class="muted" style="font-weight:800;">작업</div>
 
-      <select id="f_type" class="input">
-        <option value="">타입 전체</option>
-        <option value="EOT">EOT</option>
-        <option value="Suspension">Suspension</option>
-        <option value="Gantry">Gantry</option>
-        <option value="Post">Post</option>
-        <option value="Wall">Wall</option>
-        <option value="Monorail">Monorail</option>
-        <option value="Service Crane">Service Crane</option>
-        <option value="타워">타워</option>
-        <option value="Tower">Tower</option>
-      </select>
+        <input id="r_no" class="input" placeholder="예: 203,678,508 / 타워는 TC-61" />
+        <select id="r_area" class="input">
+          <option value="">지역(자동)</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+        </select>
+        <select id="r_type" class="input">
+          <option value="">타입(자동)</option>
+          <option value="EOT">EOT</option>
+          <option value="Suspension">Suspension</option>
+          <option value="Gantry">Gantry</option>
+          <option value="Post">Post</option>
+          <option value="Wall">Wall</option>
+          <option value="Monorail">Monorail</option>
+          <option value="Service Crane">Service Crane</option>
+          <option value="타워">타워</option>
+        </select>
+        <input id="r_loc" class="input" placeholder="위치(자동/수동)" />
+        <textarea id="r_content" class="input" placeholder="비고 입력(엔터 가능)&#10;예) 인버터 교체필요 25/12/20"></textarea>
 
-      <button class="btn" onclick="loadRemarks()">적용</button>
-    </div>
-  </section>
+        <div class="btn-row">
+          <button class="btn" id="btnAdd">추가/누적</button>
+          <button class="btn ghost" id="btnClear">입력 초기화</button>
+        </div>
+      </div>
 
-  <!-- 비고 추가(있으면 append update / 없으면 insert) -->
-  <section class="card">
-    <h2>비고 추가</h2>
-    <div class="grid" style="grid-template-columns: 260px 1fr 180px 180px;">
-      <input id="a_no" class="input" placeholder="크레인 번호 입력" />
-      <textarea id="a_content" class="input" placeholder="비고 내용 (엔터 가능)"></textarea>
-      <button class="btn" onclick="addOrAppendRemark()">추가/누적</button>
-      <button class="btn gray" onclick="clearAdd()">입력 초기화</button>
-    </div>
-  </section>
+      <div class="muted">
+        · 같은 크레인 번호가 이미 있으면 <b>기존 비고에 엔터로 누적</b>됩니다.<br/>
+        · <b>FK 오류</b>(remarks_crane_no_fkey) 뜨면: 그 번호는 <b>크레인 리스트에서 먼저 등록</b>해야 합니다.
+      </div>
+    </section>
 
-  <!-- 리스트 -->
-  <section class="card">
-    <h2>리스트</h2>
-    <table>
-      <thead>
-        <tr>
-          <th style="width: 140px;">번호</th>
-          <th style="width: 160px;">타입</th>
-          <th style="width: 90px;">지역</th>
-          <th style="width: 220px;">위치</th>
-          <th>비고</th>
-          <th style="width: 160px;">관리</th>
-        </tr>
-      </thead>
-      <tbody id="remarkList"></tbody>
-    </table>
-  </section>
+    <!-- ===== 필터 ===== -->
+    <section class="card">
+      <h2>필터</h2>
+      <div class="btn-row" style="gap:12px;">
+        <input id="f_no" class="input" placeholder="크레인 번호" style="min-width:240px;">
+        <select id="f_area" class="input" style="min-width:180px;">
+          <option value="">지역 전체</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+        </select>
+        <select id="f_type" class="input" style="min-width:220px;">
+          <option value="">타입 전체</option>
+          <option value="EOT">EOT</option>
+          <option value="Suspension">Suspension</option>
+          <option value="Gantry">Gantry</option>
+          <option value="Post">Post</option>
+          <option value="Wall">Wall</option>
+          <option value="Monorail">Monorail</option>
+          <option value="Service Crane">Service Crane</option>
+          <option value="타워">타워</option>
+        </select>
+        <input id="f_loc" class="input" placeholder="위치" style="min-width:220px;">
+        <button class="btn" id="btnFilter">적용</button>
+        <button class="btn ghost" id="btnReset">초기화</button>
+      </div>
+    </section>
 
-</main>
+    <!-- ===== 리스트 ===== -->
+    <section class="card">
+      <h2>리스트</h2>
 
-<!-- 수정 모달 -->
-<div class="modal-back" id="editBack">
-  <div class="modal">
-    <h3>비고 수정</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:140px;">번호</th>
+              <th style="width:120px;">타입</th>
+              <th style="width:90px;">지역</th>
+              <th style="width:240px;">위치</th>
+              <th>비고</th>
+              <th style="width:160px;">관리</th>
+            </tr>
+          </thead>
+          <tbody id="remarkList"></tbody>
+        </table>
+      </div>
+    </section>
 
-    <input type="hidden" id="edit_id" />
+  </main>
 
-    <div class="row" style="margin-bottom: 10px;">
-      <div><b>크레인 번호</b></div>
-      <input id="edit_no" class="input" readonly />
-    </div>
-
-    <div class="row" style="margin-bottom: 12px;">
-      <div><b>비고 내용</b></div>
-      <textarea id="edit_content" class="input"></textarea>
-    </div>
-
-    <div style="display:flex; gap:10px; justify-content:flex-end;">
-      <button class="btn gray" onclick="closeEdit()">닫기</button>
-      <button class="btn" onclick="saveEdit()">저장</button>
+  <!-- 수정 모달 -->
+  <div id="editModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:999; align-items:center; justify-content:center;">
+    <div style="width:min(920px, 92vw); background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; box-shadow: var(--shadow);">
+      <h3 style="margin:0 0 10px 0;">비고 수정</h3>
+      <div class="muted" id="editMeta" style="margin-bottom:10px;"></div>
+      <textarea id="editContent" class="input" style="height:220px; width:100%;"></textarea>
+      <div class="btn-row" style="justify-content:flex-end; margin-top:12px;">
+        <button class="btn ghost" onclick="closeEdit()">닫기</button>
+        <button class="btn" onclick="saveEdit()">저장</button>
+      </div>
     </div>
   </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js"></script>
+  <!-- Supabase + app.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
 
-<script>
-  // ===== helpers =====
-  function _normNo(v) {
-    return String(v || "").trim();
-  }
-  function _isTowerNo(no) {
-    return String(no || "").toUpperCase().startsWith("TC-");
-  }
+  <script>
+    // ===== 전역 캐시 =====
+    let cranesMap = new Map();     // crane_no -> { area, crane_type, group_name }
+    let remarksCache = [];         // [{ id, crane_no, content }]
+    let editId = null;
 
-  // ===== load + join(관계 없이 2번 조회로 매칭) =====
-  async function loadRemarks() {
-    const tbody = document.getElementById("remarkList");
-    tbody.innerHTML = "";
+    function normalizeOneCraneNo(v){
+      let s = String(v || "").trim();
+      if (!s) return "";
+      // 쉼표 제거는 상위 split에서 처리됨
+      if (/^TC-/i.test(s)) {
+        // TC-는 그대로(대문자 TC-)
+        return "TC-" + s.slice(3).trim();
+      }
+      if (/^C-/i.test(s)) {
+        return "C-" + s.slice(2).trim();
+      }
+      if (/^\d+$/.test(s)) {
+        return "C-" + s;
+      }
+      return s; // 사용자가 C-304 같은 형태 말고도 직접 넣을 수 있으니 보존
+    }
 
-    const fNo = _normNo(document.getElementById("f_no").value);
-    const fArea = document.getElementById("f_area").value || "";
-    const fType = document.getElementById("f_type").value || "";
+    function splitCraneNos(raw){
+      return String(raw || "")
+        .split(/[,\/\n\r\t ]+/)
+        .map(x => normalizeOneCraneNo(x))
+        .filter(Boolean);
+    }
 
-    // 1) remarks 조회 (존재하는 컬럼만!)
-    const { data: remarks, error: rErr } = await sb
-      .from("remarks")
-      .select("id, crane_no, content, created_at")
-      .order("created_at", { ascending: false });
+    function isTowerNo(craneNo){
+      return String(craneNo || "").toUpperCase().startsWith("TC-");
+    }
 
-    if (rErr) return alert(rErr.message);
-    if (!remarks) return;
-
-    // 2) cranes 정보 매칭용으로 crane_no 목록 수집
-    const craneNos = Array.from(new Set(remarks.map(r => r.crane_no).filter(Boolean)));
-
-    let craneMap = {};
-    if (craneNos.length > 0) {
-      const { data: cranes, error: cErr } = await sb
+    // cranes 테이블에서 메타 로드 (관계조인 안 씀: 400/relationship 오류 방지)
+    async function loadCranesMeta(){
+      // range로 많이 가져오기
+      const { data, error } = await sb
         .from("cranes")
         .select("crane_no, area, crane_type, group_name")
-        .in("crane_no", craneNos);
+        .range(0, 9999);
 
-      if (!cErr && cranes) {
-        cranes.forEach(c => { craneMap[c.crane_no] = c; });
+      if (error) {
+        console.error(error);
+        alert("cranes 메타 로드 실패: " + error.message);
+        return;
       }
-    }
 
-    // 3) 필터 적용 + 렌더
-    const filtered = remarks.filter(r => {
-      const no = _normNo(r.crane_no);
-      if (fNo && !no.toUpperCase().includes(fNo.toUpperCase())) return false;
-
-      const c = craneMap[no] || {};
-      const area = c.area || "";
-      const type = c.crane_type || (_isTowerNo(no) ? "타워" : "");
-
-      if (fArea && area !== fArea) return false;
-      if (fType) {
-        // fType이 "타워/Tower"면 번호(TC-)도 타워로 취급
-        const wantTower = (fType === "타워" || fType === "Tower");
-        if (wantTower) {
-          if (!(type === "타워" || type === "Tower" || _isTowerNo(no))) return false;
-        } else {
-          if (type !== fType) return false;
-        }
-      }
-      return true;
-    });
-
-    filtered.forEach(r => {
-      const no = _normNo(r.crane_no);
-      const c = craneMap[no] || {};
-      const area = c.area || "";
-      const type = c.crane_type || (_isTowerNo(no) ? "타워" : "");
-      const loc = c.group_name || "";
-
-      const content = (r.content ?? "").toString();
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${no}</td>
-        <td>${type}</td>
-        <td>${area}</td>
-        <td>${loc}</td>
-        <td class="td-left">${escapeHtml(content)}</td>
-        <td>
-          <button class="btn-mini" onclick="openEdit('${r.id}')">수정</button>
-          <button class="btn-mini red" onclick="deleteRemark('${r.id}')">삭제</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  // ===== add or append(update) =====
-  async function addOrAppendRemark() {
-    const no = _normNo(document.getElementById("a_no").value);
-    const text = (document.getElementById("a_content").value || "").trim();
-
-    if (!no) return alert("크레인 번호 입력");
-    if (!text) return alert("비고 내용 입력");
-
-    // 기존 1건 찾기(최신 1건)
-    const { data: exist, error: fErr } = await sb
-      .from("remarks")
-      .select("id, content, created_at")
-      .eq("crane_no", no)
-      .order("created_at", { ascending: false })
-      .limit(1);
-
-    if (fErr) return alert(fErr.message);
-
-    if (exist && exist.length > 0) {
-      const cur = (exist[0].content ?? "").toString().trim();
-      const merged = cur ? (cur + "\n" + text) : text;
-
-      const { error: uErr } = await sb
-        .from("remarks")
-        .update({ content: merged })
-        .eq("id", exist[0].id);
-
-      if (uErr) return alert(uErr.message);
-    } else {
-      const { error: iErr } = await sb
-        .from("remarks")
-        .insert({ crane_no: no, content: text });
-
-      if (iErr) return alert(iErr.message);
-    }
-
-    clearAdd();
-    loadRemarks();
-  }
-
-  function clearAdd() {
-    document.getElementById("a_no").value = "";
-    document.getElementById("a_content").value = "";
-  }
-
-  // ===== edit modal =====
-  async function openEdit(id) {
-    // ✅ 여기서 null 나는 문제 방지: 요소 존재 체크
-    const back = document.getElementById("editBack");
-    const eId = document.getElementById("edit_id");
-    const eNo = document.getElementById("edit_no");
-    const eContent = document.getElementById("edit_content");
-    if (!back || !eId || !eNo || !eContent) return alert("수정 UI(id) 누락: remarks.html 확인");
-
-    const { data, error } = await sb
-      .from("remarks")
-      .select("id, crane_no, content")
-      .eq("id", id)
-      .single();
-
-    if (error) return alert(error.message);
-    if (!data) return alert("데이터 없음");
-
-    eId.value = data.id;
-    eNo.value = data.crane_no || "";
-    eContent.value = (data.content ?? "").toString();
-
-    back.style.display = "flex";
-    eContent.focus();
-  }
-
-  function closeEdit() {
-    const back = document.getElementById("editBack");
-    if (back) back.style.display = "none";
-  }
-
-  async function saveEdit() {
-    const id = document.getElementById("edit_id").value;
-    const content = document.getElementById("edit_content").value || "";
-
-    if (!id) return alert("수정 대상 id 없음");
-
-    const { error } = await sb
-      .from("remarks")
-      .update({ content })
-      .eq("id", id);
-
-    if (error) return alert(error.message);
-
-    closeEdit();
-    loadRemarks();
-  }
-
-  async function deleteRemark(id) {
-    if (!confirm("정말 삭제할까요?")) return;
-
-    const { error } = await sb.from("remarks").delete().eq("id", id);
-    if (error) return alert(error.message);
-
-    loadRemarks();
-  }
-
-  // XSS 방지(비고 표시용)
-  function escapeHtml(str) {
-    return String(str)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    loadRemarks();
-
-    // 모달 밖 클릭하면 닫기
-    const back = document.getElementById("editBack");
-    if (back) {
-      back.addEventListener("click", (e) => {
-        if (e.target === back) closeEdit();
+      cranesMap = new Map();
+      (data || []).forEach(c => {
+        cranesMap.set(c.crane_no, {
+          area: c.area || "",
+          crane_type: c.crane_type || "",
+          group_name: c.group_name || "" // 위치로 사용
+        });
       });
     }
-  });
 
-  // 전역 바인딩(안전)
-  window.loadRemarks = loadRemarks;
-  window.addOrAppendRemark = addOrAppendRemark;
-  window.openEdit = openEdit;
-  window.closeEdit = closeEdit;
-  window.saveEdit = saveEdit;
-  window.deleteRemark = deleteRemark;
-  window.clearAdd = clearAdd;
-</script>
+    async function loadRemarks(){
+      const { data, error } = await sb
+        .from("remarks")
+        .select("id, crane_no, content")
+        .order("id", { ascending: false });
 
+      if (error) {
+        console.error(error);
+        alert(error.message);
+        return;
+      }
+
+      remarksCache = data || [];
+      renderRemarks();
+    }
+
+    function getMeta(craneNo){
+      const m = cranesMap.get(craneNo);
+      if (!m) return { area:"", crane_type: isTowerNo(craneNo) ? "타워" : "", group_name:"" };
+      return m;
+    }
+
+    function matchesFilter(row){
+      const fNo = document.getElementById("f_no").value.trim();
+      const fArea = document.getElementById("f_area").value;
+      const fType = document.getElementById("f_type").value;
+      const fLoc = document.getElementById("f_loc").value.trim();
+
+      const meta = getMeta(row.crane_no);
+
+      if (fNo && !row.crane_no.toUpperCase().includes(fNo.toUpperCase())) return false;
+      if (fArea && meta.area !== fArea) return false;
+      if (fType) {
+        const t = meta.crane_type || (isTowerNo(row.crane_no) ? "타워" : "");
+        if (t !== fType) return false;
+      }
+      if (fLoc) {
+        const loc = (meta.group_name || "");
+        if (!loc.toUpperCase().includes(fLoc.toUpperCase())) return false;
+      }
+      return true;
+    }
+
+    function renderRemarks(){
+      const tbody = document.getElementById("remarkList");
+      tbody.innerHTML = "";
+
+      const rows = remarksCache.filter(matchesFilter);
+
+      rows.forEach(r => {
+        const meta = getMeta(r.crane_no);
+        const type = meta.crane_type || (isTowerNo(r.crane_no) ? "타워" : "");
+        const area = meta.area || "";
+        const loc  = meta.group_name || "";
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${r.crane_no}</td>
+          <td>${type}</td>
+          <td>${area}</td>
+          <td>${loc}</td>
+          <td class="remark-cell">${escapeHtml(r.content || "")}</td>
+          <td>
+            <button class="btn-mini" onclick="openEdit('${r.id}')">수정</button>
+            <button class="btn-mini btn warn" onclick="deleteRemark('${r.id}')">삭제</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;");
+    }
+
+    // ===== 추가/누적 =====
+    async function addOrAppend(){
+      const rawNos = document.getElementById("r_no").value;
+      const nos = splitCraneNos(rawNos);
+      const text = document.getElementById("r_content").value;
+
+      if (!nos.length) return alert("크레인 번호 입력");
+      if (!text.trim()) return alert("비고 내용 입력");
+
+      // 자동/수동 메타 입력(있으면 우선)
+      const manualArea = document.getElementById("r_area").value;
+      const manualType = document.getElementById("r_type").value;
+      const manualLoc  = document.getElementById("r_loc").value.trim();
+
+      const missing = [];
+      const done = [];
+      const failed = [];
+
+      for (const no of nos){
+        // FK 방지: cranes에 존재하는지 확인(없으면 insert 실패)
+        const meta = cranesMap.get(no);
+        if (!meta){
+          missing.push(no);
+          continue;
+        }
+
+        // 기존 remarks 확인
+        const { data: existing, error: exErr } = await sb
+          .from("remarks")
+          .select("id, content")
+          .eq("crane_no", no)
+          .maybeSingle();
+
+        if (exErr) {
+          console.error(exErr);
+          failed.push(no);
+          continue;
+        }
+
+        const newContent = existing?.content
+          ? (existing.content + "\n" + text)
+          : text;
+
+        if (existing?.id){
+          const { error: upErr } = await sb
+            .from("remarks")
+            .update({ content: newContent })
+            .eq("id", existing.id);
+
+          if (upErr) {
+            console.error(upErr);
+            failed.push(no);
+          } else {
+            done.push(no);
+          }
+        } else {
+          // 신규 insert
+          const { error: insErr } = await sb
+            .from("remarks")
+            .insert({ crane_no: no, content: newContent });
+
+          if (insErr) {
+            // 409(중복) / FK 등 방어
+            console.error(insErr);
+
+            // 혹시 중복(409)면 다시 select 후 update로 마무리
+            const msg = String(insErr.message || "");
+            if (msg.includes("409") || msg.toLowerCase().includes("duplicate") || msg.toLowerCase().includes("conflict")) {
+              const { data: ex2 } = await sb
+                .from("remarks")
+                .select("id, content")
+                .eq("crane_no", no)
+                .maybeSingle();
+
+              if (ex2?.id){
+                const merged = (ex2.content ? ex2.content + "\n" : "") + text;
+                const { error: up2 } = await sb
+                  .from("remarks")
+                  .update({ content: merged })
+                  .eq("id", ex2.id);
+
+                if (!up2) done.push(no);
+                else failed.push(no);
+              } else {
+                failed.push(no);
+              }
+            } else {
+              failed.push(no);
+            }
+          } else {
+            done.push(no);
+          }
+        }
+      }
+
+      if (missing.length){
+        alert("아래 번호는 크레인 리스트에 없어서 비고 저장 불가(먼저 크레인 등록 필요):\n- " + missing.join(", "));
+      }
+      if (failed.length){
+        alert("저장 실패:\n- " + failed.join(", "));
+      }
+
+      // 입력 메타 자동 채우기(첫 번째 번호 기준)
+      const first = nos[0];
+      const m = cranesMap.get(first);
+      if (m){
+        if (!manualArea) document.getElementById("r_area").value = m.area || "";
+        if (!manualType) document.getElementById("r_type").value = m.crane_type || (isTowerNo(first) ? "타워" : "");
+        if (!manualLoc)  document.getElementById("r_loc").value  = m.group_name || "";
+      }
+
+      // 완료된 게 있으면 리로드 + 입력칸 초기화(내용/번호만)
+      if (done.length){
+        document.getElementById("r_content").value = "";
+        document.getElementById("r_no").value = "";
+        await loadRemarks();
+      }
+    }
+
+    function clearInputs(){
+      document.getElementById("r_no").value = "";
+      document.getElementById("r_content").value = "";
+      document.getElementById("r_area").value = "";
+      document.getElementById("r_type").value = "";
+      document.getElementById("r_loc").value = "";
+    }
+
+    // ===== 수정/삭제 =====
+    window.openEdit = function(id){
+      const row = remarksCache.find(x => String(x.id) === String(id));
+      if (!row){
+        alert("수정 대상 데이터를 못 찾음(새로고침 후 다시 시도)");
+        return;
+      }
+
+      editId = row.id;
+
+      const meta = getMeta(row.crane_no);
+      const type = meta.crane_type || (isTowerNo(row.crane_no) ? "타워" : "");
+      const area = meta.area || "";
+      const loc  = meta.group_name || "";
+
+      document.getElementById("editMeta").innerText =
+        `${row.crane_no} / ${type} / ${area} / ${loc}`;
+
+      document.getElementById("editContent").value = row.content || "";
+
+      const modal = document.getElementById("editModal");
+      modal.style.display = "flex";
+    }
+
+    window.closeEdit = function(){
+      editId = null;
+      document.getElementById("editModal").style.display = "none";
+    }
+
+    window.saveEdit = async function(){
+      if (!editId) return;
+      const v = document.getElementById("editContent").value;
+
+      const { error } = await sb
+        .from("remarks")
+        .update({ content: v })
+        .eq("id", editId);
+
+      if (error) return alert(error.message);
+
+      closeEdit();
+      loadRemarks();
+    }
+
+    window.deleteRemark = async function(id){
+      if (!confirm("삭제할까요?")) return;
+
+      const { error } = await sb
+        .from("remarks")
+        .delete()
+        .eq("id", id);
+
+      if (error) return alert(error.message);
+      loadRemarks();
+    }
+
+    // ===== 자동 메타 채우기: 번호 입력 후(blur) =====
+    function fillMetaFromFirstNo(){
+      const nos = splitCraneNos(document.getElementById("r_no").value);
+      if (!nos.length) return;
+      const first = nos[0];
+      const m = cranesMap.get(first);
+      if (!m) return;
+
+      // 사용자가 수동으로 선택 안 했을 때만 자동 세팅
+      if (!document.getElementById("r_area").value) document.getElementById("r_area").value = m.area || "";
+      if (!document.getElementById("r_type").value) document.getElementById("r_type").value = m.crane_type || (isTowerNo(first) ? "타워" : "");
+      if (!document.getElementById("r_loc").value.trim()) document.getElementById("r_loc").value = m.group_name || "";
+    }
+
+    // ===== 이벤트 =====
+    document.addEventListener("DOMContentLoaded", async () => {
+      document.getElementById("btnAdd").addEventListener("click", addOrAppend);
+      document.getElementById("btnClear").addEventListener("click", clearInputs);
+
+      document.getElementById("btnFilter").addEventListener("click", renderRemarks);
+      document.getElementById("btnReset").addEventListener("click", () => {
+        document.getElementById("f_no").value = "";
+        document.getElementById("f_area").value = "";
+        document.getElementById("f_type").value = "";
+        document.getElementById("f_loc").value = "";
+        renderRemarks();
+      });
+
+      document.getElementById("r_no").addEventListener("blur", fillMetaFromFirstNo);
+
+      await loadCranesMeta();
+      await loadRemarks();
+    });
+  </script>
 </body>
 </html>
