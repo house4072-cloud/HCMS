@@ -18,6 +18,10 @@
 
   --shadow: 0 8px 24px rgba(18, 22, 33, .08);
   --radius: 16px;
+   --hcms-box: var(--surface-2);
+--hcms-line: var(--line);
+--hcms-orange: var(--brand);
+
 }
 
 *{ box-sizing:border-box; }
