@@ -6,8 +6,8 @@
 
 
 // ===== [1] Supabase 초기화 =====
-const SUPABASE_URL = "https://lzfksuiftgmxwkhwhnhg.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmtzdWlmdGdteHdraHdobmhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3NzczMDMsImV4cCI6MjA4MTM1MzMwM30.BHI8dTc18Jw3akhlRL7OZ8_0sYQwjb0-QaMGjKjUfYA";
+const SUPABASE_URL = "https://lvhpebzxbszjaytfvwha.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2aHBlYnp4YnN6amF5dGZ2d2hhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NjU0NTgsImV4cCI6MjA5NjU0MTQ1OH0.wCPijSeiK9FoOqlKQU6W1aQMgkQg0Fm5DS-BHC1fV6g";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 
